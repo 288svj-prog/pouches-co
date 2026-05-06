@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Check, X, ChevronUp, Package } from 'lucide-react';
+import { Plus, Minus, Check, X, ChevronUp, Package } from 'lucide-react';
 import { celebrate } from '../lib/anim';
 import { products } from '../data/products';
 import { Tin } from '../components/Tin';
@@ -18,6 +18,7 @@ export default function BYO() {
   const items = useCart((s) => s.items);
   const add = useCart((s) => s.add);
   const remove = useCart((s) => s.remove);
+  const updateQty = useCart((s) => s.updateQty);
   const navigate = useNavigate();
 
   // Empty out every BYO item in one tap (with confirm) — leaves any non-BYO items intact.
@@ -39,6 +40,17 @@ export default function BYO() {
   const byoTotal = byoItems.reduce((s, i) => s + i.price * i.qty, 0);
   const discount = byoCount >= BYO_CONFIG.threshold ? +(byoTotal * BYO_CONFIG.rate).toFixed(2) : 0;
   const liveTotal = +(byoTotal - discount).toFixed(2);
+
+  // Expand byoItems into one slot per pouch (qty 3 of A → 3 slots of A) so the
+  // box visual stays in sync with the count, even when the user adjusts qty.
+  const byoSlots = useMemo(
+    () =>
+      byoItems.flatMap((it) =>
+        Array.from({ length: it.qty }, () => it),
+      ),
+    [byoItems],
+  );
+  const slotCount = Math.max(BYO_CONFIG.threshold, byoCount);
 
   const filtered = useMemo(() => {
     if (!strengthFilter) return products;
@@ -66,7 +78,9 @@ export default function BYO() {
     <div className="bg-bg-primary">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-16">
         <div className="text-center mb-10">
-          <Eyebrow className="mb-3">BYO BOX · {byoCount} OF 6 SELECTED</Eyebrow>
+          <Eyebrow className="mb-3">
+            BYO BOX · {byoCount > BYO_CONFIG.threshold ? `${byoCount} POUCHES` : `${byoCount} OF ${BYO_CONFIG.threshold}`} SELECTED
+          </Eyebrow>
           <h1 className="font-display italic text-white text-5xl md:text-6xl lg:text-7xl">{headline}</h1>
           <p className="mt-4 text-white/85 max-w-2xl mx-auto">{sub}</p>
         </div>
@@ -158,26 +172,36 @@ export default function BYO() {
                       <div className="text-mono-badge text-ink-secondary mt-1">
                         ${p.price.toFixed(2)} · {p.strengthMg}MG {p.strengthTier.toUpperCase()}
                       </div>
-                      <button
-                        onClick={() => (inBox ? remove(p.slug) : add(p, 1, { byo: true }))}
-                        className={`mt-3 w-full h-10 text-[11px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 ${
-                          inBox
-                            ? 'bg-accent text-accent-on'
-                            : 'border border-white text-white hover:bg-white/5'
-                        }`}
-                      >
-                        {inBox ? (
-                          <>
+                      {inBox ? (
+                        <div className="mt-3 flex h-10 border border-accent">
+                          <button
+                            onClick={() => updateQty(p.slug, inBox.qty - 1)}
+                            className="w-10 shrink-0 bg-accent/10 text-accent hover:bg-accent/20 transition flex items-center justify-center no-tap-highlight"
+                            aria-label={inBox.qty === 1 ? 'Remove from box' : 'Decrease quantity'}
+                          >
+                            <Minus size={14} strokeWidth={3} />
+                          </button>
+                          <div className="flex-1 bg-accent text-accent-on flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider tabular-nums">
                             <Check size={12} strokeWidth={3} />
-                            <span>IN BOX ({inBox.qty})</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus size={12} strokeWidth={3} />
-                            <span>ADD TO BOX</span>
-                          </>
-                        )}
-                      </button>
+                            <span>IN BOX · {inBox.qty}</span>
+                          </div>
+                          <button
+                            onClick={() => updateQty(p.slug, inBox.qty + 1)}
+                            className="w-10 shrink-0 bg-accent/10 text-accent hover:bg-accent/20 transition flex items-center justify-center no-tap-highlight"
+                            aria-label="Increase quantity"
+                          >
+                            <Plus size={14} strokeWidth={3} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => add(p, 1, { byo: true })}
+                          className="mt-3 w-full h-10 text-[11px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 border border-white text-white hover:bg-white/5"
+                        >
+                          <Plus size={12} strokeWidth={3} />
+                          <span>ADD TO BOX</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -191,8 +215,8 @@ export default function BYO() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-mono-eyebrow text-accent">YOUR BOX</div>
-                  <div className="text-white font-display italic text-3xl mt-1 leading-none">
-                    {byoCount} of 6
+                  <div className="text-white font-display italic text-3xl mt-1 leading-none tabular-nums">
+                    {byoCount} {byoCount > BYO_CONFIG.threshold ? 'pouches' : `of ${BYO_CONFIG.threshold}`}
                   </div>
                 </div>
                 {byoCount > 0 && (
@@ -213,27 +237,32 @@ export default function BYO() {
             <div className="p-5 border-b border-edge-muted">
               <div className="text-mono-eyebrow text-accent mb-3">BOX VISUAL</div>
               <div className="grid grid-cols-3 gap-2">
-                {Array.from({ length: 6 }, (_, i) => {
-                  const it = byoItems[i];
-                  if (it) {
-                    const brand = brandBySlug(it.brandSlug);
+                {Array.from({ length: slotCount }, (_, i) => {
+                  const slot = byoSlots[i];
+                  if (slot) {
+                    const brand = brandBySlug(slot.brandSlug);
                     return (
-                      <div key={i} className="relative aspect-square rounded overflow-hidden border border-accent/40">
+                      <div key={i} className="relative aspect-square rounded overflow-hidden border border-accent/40 group">
                         <Tin
                           brand={brand?.name || ''}
-                          swatch={it.swatch}
-                          textColor={it.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                          swatch={slot.swatch}
+                          textColor={slot.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
                           surface={brand?.surface || 'concrete'}
                           size={100}
-                          image={productImage(it.productSlug, it.brandSlug)}
+                          image={productImage(slot.productSlug, slot.brandSlug)}
                         />
                         <button
-                          onClick={() => remove(it.productSlug)}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-bg-primary border border-edge flex items-center justify-center"
-                          aria-label="Remove"
+                          onClick={() => updateQty(slot.productSlug, slot.qty - 1)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-bg-primary/90 border border-edge flex items-center justify-center hover:border-danger hover:text-danger transition"
+                          aria-label="Remove one pouch"
                         >
                           <X size={11} className="text-white" />
                         </button>
+                        {slot.qty > 1 && (
+                          <span className="absolute bottom-1 left-1 px-1.5 h-4 inline-flex items-center bg-accent text-accent-on text-[9px] font-bold tracking-wider tabular-nums">
+                            ×{slot.qty}
+                          </span>
+                        )}
                       </div>
                     );
                   }
@@ -358,32 +387,37 @@ export default function BYO() {
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
-              {/* 2x3 grid of slots */}
+              {/* Grid of slots — one tile per pouch (expands beyond 6 if user adds extras) */}
               <div className="grid grid-cols-3 gap-2 mb-5">
-                {Array.from({ length: 6 }, (_, i) => {
-                  const it = byoItems[i];
-                  if (it) {
-                    const brand = brandBySlug(it.brandSlug);
+                {Array.from({ length: slotCount }, (_, i) => {
+                  const slot = byoSlots[i];
+                  if (slot) {
+                    const brand = brandBySlug(slot.brandSlug);
                     return (
                       <div key={i} className="relative aspect-square overflow-hidden border border-accent/40">
                         <Tin
                           brand={brand?.name || ''}
-                          swatch={it.swatch}
-                          textColor={it.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                          swatch={slot.swatch}
+                          textColor={slot.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
                           surface={brand?.surface || 'concrete'}
                           size={120}
-                          image={productImage(it.productSlug, it.brandSlug)}
+                          image={productImage(slot.productSlug, slot.brandSlug)}
                         />
                         <button
-                          onClick={() => remove(it.productSlug)}
-                          className="absolute top-1 right-1 w-6 h-6 bg-bg-primary border border-edge flex items-center justify-center"
-                          aria-label="Remove"
+                          onClick={() => updateQty(slot.productSlug, slot.qty - 1)}
+                          className="absolute top-1 right-1 w-6 h-6 bg-bg-primary/90 border border-edge flex items-center justify-center"
+                          aria-label="Remove one pouch"
                         >
                           <X size={11} className="text-white" />
                         </button>
+                        {slot.qty > 1 && (
+                          <span className="absolute top-1 left-1 px-1.5 h-5 inline-flex items-center bg-accent text-accent-on text-[10px] font-bold tracking-wider tabular-nums">
+                            ×{slot.qty}
+                          </span>
+                        )}
                         <span
                           className="absolute left-0 right-0 bottom-0 h-1"
-                          style={{ background: it.swatch }}
+                          style={{ background: slot.swatch }}
                         />
                       </div>
                     );
