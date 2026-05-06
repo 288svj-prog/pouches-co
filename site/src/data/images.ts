@@ -33,6 +33,23 @@ export const QUIZ_ICONS = {
   sharp: '/img/icons/quiz-sharp.jpg',
 };
 
+// Brand wordmark logos (SVG, monochrome — color via CSS currentColor)
+export const BRAND_LOGOS: Record<string, string> = {
+  zyn: '/brands/zyn.svg',
+  velo: '/brands/velo.svg',
+  ace: '/brands/ace.svg',
+  iceberg: '/brands/iceberg.svg',
+  fumi: '/brands/fumi.svg',
+  loop: '/brands/loop.svg',
+  'nordic-spirit': '/brands/nordic-spirit.svg',
+  killa: '/brands/killa.svg',
+  skruf: '/brands/skruf.svg',
+  helwit: '/brands/helwit.svg',
+  pablo: '/brands/pablo.svg',
+  // SVG file is named whitefox.svg (no hyphen) but the brand slug is white-fox
+  'white-fox': '/brands/whitefox.svg',
+};
+
 // Per-product overrides — fall back to the brand image when no override.
 export const PRODUCT_IMAGES: Record<string, string> = {};
 

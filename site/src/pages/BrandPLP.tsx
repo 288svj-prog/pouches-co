@@ -7,6 +7,7 @@ import { Tin } from '../components/Tin';
 import { Eyebrow, StatStrip } from '../components/Eyebrow';
 import { ProductCard } from '../components/ProductCard';
 import { BRAND_IMAGES, productImage } from '../data/images';
+import { BrandLogo } from '../components/BrandLogo';
 
 export default function BrandPLP() {
   const { slug = '' } = useParams();
@@ -24,15 +25,14 @@ export default function BrandPLP() {
         <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-16 grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
             <Eyebrow className="mb-4">BRAND · {brand.productCount} PRODUCTS</Eyebrow>
-            <h1
-              className="font-display text-white leading-none"
-              style={{
-                fontSize: 'clamp(72px, 12vw, 180px)',
-                color: brand.swatch === '#FFFFFF' || brand.swatch === '#E5E5E5' ? '#FFFFFF' : brand.swatch,
-              }}
-            >
-              {brand.name}
-            </h1>
+            <h1 className="sr-only">{brand.name}</h1>
+            <BrandLogo
+              brandSlug={brand.slug}
+              height={120}
+              color={logoColorOnDark(brand.swatch)}
+              ariaLabel={`${brand.name} wordmark`}
+              className="md:!h-[160px] lg:!h-[200px]"
+            />
             <p className="mt-6 text-white/85 text-base md:text-lg max-w-md leading-relaxed">{brand.description}</p>
             <div className="mt-6">
               <StatStrip
@@ -87,31 +87,35 @@ export default function BrandPLP() {
             Brands {brand.name} fans also stock.
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {others.map((b) => {
-              const flag = products.find((p) => p.brandSlug === b.slug);
-              return (
-                <Link
-                  key={b.slug}
-                  to={`/brands/${b.slug}`}
-                  className="group block bg-bg-secondary border border-edge rounded-card overflow-hidden hover:border-accent/40 transition"
-                >
-                  <div className="aspect-square">
-                    <Tin
-                      brand={b.name}
-                      swatch={flag?.swatch || b.swatch}
-                      textColor={b.textOnSwatch}
-                      surface={b.surface}
-                      size={240}
-                      image={BRAND_IMAGES[b.slug]}
-                    />
-                  </div>
-                  <div className="p-3 flex items-center justify-between">
-                    <span className="text-white font-bold text-sm">{b.name}</span>
-                    <ArrowRight size={14} className="text-accent" />
-                  </div>
-                </Link>
-              );
-            })}
+            {others.map((b) => (
+              <Link
+                key={b.slug}
+                to={`/brands/${b.slug}`}
+                className="group relative block bg-bg-secondary border border-edge overflow-hidden hover:border-accent transition"
+              >
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background: `radial-gradient(circle at 50% 40%, ${b.swatch} 0%, ${b.swatch}66 45%, #0A0A0A 100%)`,
+                    opacity: 0.55,
+                  }}
+                  aria-hidden="true"
+                />
+                <div className="relative aspect-square flex items-center justify-center p-6">
+                  <BrandLogo
+                    brandSlug={b.slug}
+                    height={48}
+                    color={b.textOnSwatch}
+                    ariaLabel={`${b.name} wordmark`}
+                    className="md:!h-16 transition-transform duration-base group-hover:scale-105"
+                  />
+                </div>
+                <div className="relative p-3 flex items-center justify-between border-t border-edge-muted bg-bg-primary/80 backdrop-blur-sm">
+                  <span className="text-white font-bold text-sm">{b.name}</span>
+                  <ArrowRight size={14} className="text-accent" />
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -132,16 +136,14 @@ function AboutBrand({ brand, onClose }: { brand: NonNullable<ReturnType<typeof b
           <button onClick={onClose}><X size={20} className="text-white" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
-          <h2
-            className="font-display"
-            style={{
-              fontSize: 'clamp(56px, 8vw, 96px)',
-              color: brand.swatch === '#FFFFFF' || brand.swatch === '#E5E5E5' ? '#FFFFFF' : brand.swatch,
-              lineHeight: 0.95,
-            }}
-          >
-            {brand.name}
-          </h2>
+          <h2 className="sr-only">{brand.name}</h2>
+          <BrandLogo
+            brandSlug={brand.slug}
+            height={64}
+            color={logoColorOnDark(brand.swatch)}
+            ariaLabel={`${brand.name} wordmark`}
+            className="md:!h-24"
+          />
           <div className="mt-3 mb-6">
             <StatStrip
               items={[`EST. ${brand.est}`, brand.city.toUpperCase(), `${brand.flavors} FLAVORS`, `${brand.rating.toFixed(1)} ★`]}
@@ -189,4 +191,21 @@ function Stat({ label, value }: { label: string; value: string }) {
       <div className="text-white text-sm mt-1">{value}</div>
     </div>
   );
+}
+
+/**
+ * Pick a brand-logo fill color that reads on the dark page background.
+ * If the brand's own swatch is too dark (luminance < 0.25), fall back to
+ * white so the logo doesn't disappear into the background.
+ */
+function logoColorOnDark(swatch: string): string {
+  const hex = swatch.replace('#', '');
+  const full = hex.length === 3 ? hex.split('').map((c) => c + c).join('') : hex;
+  const num = parseInt(full, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  // Relative luminance approximation (sRGB)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum < 0.25 ? '#FFFFFF' : swatch;
 }

@@ -12,6 +12,7 @@ import { HeroCarousel, type HeroSlide } from '../components/HeroCarousel';
 import { useState } from 'react';
 import { brandBySlug } from '../data/brands';
 import { BRAND_IMAGES, HERO_IMAGES, QUIZ_ICONS, productImage } from '../data/images';
+import { BrandLogo } from '../components/BrandLogo';
 // HERO_IMAGES is consumed by the slide config inside Hero(); keep the import.
 
 export default function Home() {
@@ -256,34 +257,39 @@ function BrandWall() {
           <p className="mt-4 text-ink-secondary">Curated. Stocked. Shipped to 47 countries.</p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
-          {brands.map((b) => {
-            const flagship = products.find((p) => p.brandSlug === b.slug);
-            return (
-              <Link
-                to={`/brands/${b.slug}`}
-                key={b.slug}
-                className="group block bg-bg-secondary border border-edge rounded-card overflow-hidden hover:border-accent/40 transition"
-              >
-                <div className="relative aspect-square overflow-hidden">
-                  <span className="absolute top-3 left-3 z-10 text-mono-badge text-white drop-shadow-md">
-                    {b.productCount} PRODUCTS
-                  </span>
-                  <Tin
-                    brand={b.name}
-                    swatch={flagship?.swatch || b.swatch}
-                    textColor={b.textOnSwatch}
-                    surface={b.surface}
-                    size={300}
-                    image={BRAND_IMAGES[b.slug]}
-                  />
-                </div>
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <span className="text-white font-bold uppercase tracking-wider text-sm">{b.name}</span>
-                  <ArrowRight size={16} className="text-accent group-hover:translate-x-1 transition" />
-                </div>
-              </Link>
-            );
-          })}
+          {brands.map((b) => (
+            <Link
+              to={`/brands/${b.slug}`}
+              key={b.slug}
+              className="group relative block bg-bg-secondary border border-edge overflow-hidden hover:border-accent transition no-tap-highlight"
+            >
+              {/* Brand-tinted gradient backdrop — uses the brand's swatch color */}
+              <div
+                className="absolute inset-0 transition-opacity duration-base"
+                style={{
+                  background: `radial-gradient(circle at 50% 40%, ${b.swatch} 0%, ${b.swatch}80 40%, #0A0A0A 100%)`,
+                  opacity: 0.55,
+                }}
+                aria-hidden="true"
+              />
+              <div className="relative aspect-square flex items-center justify-center p-6">
+                <span className="absolute top-3 left-3 z-10 text-mono-badge text-white">
+                  {b.productCount} PRODUCTS
+                </span>
+                <BrandLogo
+                  brandSlug={b.slug}
+                  height={56}
+                  color={b.textOnSwatch}
+                  ariaLabel={`${b.name} wordmark`}
+                  className="md:!h-20 transition-transform duration-base group-hover:scale-105"
+                />
+              </div>
+              <div className="relative px-4 py-3 flex items-center justify-between border-t border-edge-muted bg-bg-primary/80 backdrop-blur-sm">
+                <span className="text-white font-bold uppercase tracking-wider text-sm">{b.name}</span>
+                <ArrowRight size={16} className="text-accent group-hover:translate-x-1 transition" />
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </section>
