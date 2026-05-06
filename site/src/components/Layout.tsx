@@ -23,6 +23,14 @@ export function Layout() {
     setSearch(false);
   }, [pathname, closeDrawer]);
 
+  // Allow other components (e.g. mobile menu) to open the search overlay
+  // without prop-drilling.
+  useEffect(() => {
+    const onOpenSearch = () => setSearch(true);
+    document.addEventListener('open-search', onOpenSearch);
+    return () => document.removeEventListener('open-search', onOpenSearch);
+  }, []);
+
   return (
     <div className="min-h-screen bg-bg-primary text-white flex flex-col">
       <ScrollToTop />

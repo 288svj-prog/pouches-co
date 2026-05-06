@@ -68,7 +68,7 @@ export function HeroCarousel({ slides }: { slides: HeroSlide[] }) {
       aria-roledescription="carousel"
       aria-label="POUCHES brand stories"
     >
-      <div className="relative w-full h-[100vh] min-h-[680px] max-h-[1020px] overflow-hidden">
+      <div className="relative w-full h-[78vh] md:h-[100vh] min-h-[520px] md:min-h-[680px] max-h-[1020px] overflow-hidden">
         {/* Stacked slides — only the active one is visible (cross-fade) */}
         {slides.map((s, i) => (
           <img

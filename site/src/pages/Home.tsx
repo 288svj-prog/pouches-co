@@ -103,8 +103,9 @@ function Hero() {
     <>
       <HeroCarousel slides={slides} />
 
-      {/* Stat strip with acid-green hairlines above + below */}
-      <div className="relative bg-bg-primary">
+      {/* Stat strip with acid-green hairlines above + below — desktop/tablet only,
+          mobile is space-constrained and doesn't benefit from this band */}
+      <div className="hidden md:block relative bg-bg-primary">
         <div className="absolute top-0 inset-x-0 h-px bg-accent/30 pointer-events-none" />
         <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-5">
           <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 text-mono-eyebrow text-white">
@@ -135,10 +136,10 @@ function BrandStrip() {
             VIEW ALL <ArrowRight size={11} />
           </Link>
         </div>
-        {/* Single-row strip — wraps to allow logos to flex at small viewports */}
+        {/* Two rows on mobile (6×2), single row sm+ (12×1) */}
         <Link
           to="/brands"
-          className="grid grid-cols-12 items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8 group"
+          className="grid grid-cols-6 sm:grid-cols-12 items-center gap-y-4 gap-x-2 sm:gap-4 md:gap-6 lg:gap-8 group"
           aria-label="Browse all brands"
         >
           {brands.map((b) => (
@@ -167,8 +168,9 @@ function Lookbook() {
     .slice(0, 8)
     .map((b) => products.find((p) => p.brandSlug === b.slug && p.bestseller) || products.find((p) => p.brandSlug === b.slug))
     .filter((x): x is NonNullable<typeof x> => !!x);
+  const ref = useReveal<HTMLElement>({ stagger: true, childSelector: '.lookbook-card', each: 80, threshold: 0.1 });
   return (
-    <section className="bg-bg-primary py-12 md:py-20 border-b border-edge-muted">
+    <section ref={ref} className="bg-bg-primary py-12 md:py-20 border-b border-edge-muted">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
         {/* Tag pills — drop metadata moved here from old hero */}
         <div className="flex flex-wrap items-center gap-2 mb-8">
@@ -190,7 +192,8 @@ function Lookbook() {
               <Link
                 key={p.slug}
                 to={`/products/${p.slug}`}
-                className="group block bg-bg-secondary rounded-card border border-edge hover:border-accent/40 transition overflow-hidden"
+                className="lookbook-card group block bg-bg-secondary border border-edge hover:border-accent/40 transition overflow-hidden"
+                style={{ opacity: 0 }}
               >
                 <div className="aspect-square">
                   <Tin
@@ -302,8 +305,9 @@ function BYOSection() {
 }
 
 function BrandWall() {
+  const ref = useReveal<HTMLElement>({ stagger: true, childSelector: '.brand-wall-card', each: 60, threshold: 0.1 });
   return (
-    <section className="bg-bg-primary py-16 md:py-24 border-t border-edge-muted">
+    <section ref={ref} className="bg-bg-primary py-16 md:py-24 border-t border-edge-muted">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="text-center mb-12 relative">
           <Eyebrow className="mb-4 inline-flex items-center gap-3 justify-center">
@@ -321,7 +325,8 @@ function BrandWall() {
             <Link
               to={`/brands/${b.slug}`}
               key={b.slug}
-              className="group relative block bg-bg-secondary border border-edge overflow-hidden hover:border-accent transition no-tap-highlight"
+              className="brand-wall-card group relative block bg-bg-secondary border border-edge overflow-hidden hover:border-accent transition no-tap-highlight"
+              style={{ opacity: 0 }}
             >
               {/* Brand-tinted gradient backdrop — uses the brand's swatch color */}
               <div
