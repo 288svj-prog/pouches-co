@@ -30,25 +30,36 @@ export default function PDP() {
   if (!product) return <Navigate to="/shop" replace />;
   const brand = brandBySlug(product.brandSlug)!;
   const sameBrand = productsByBrand(product.brandSlug);
-  // Dedupe flavors by name — pick the variant matching the active product's strength when possible.
-  const flavors = (() => {
-    const byName = new Map<string, typeof sameBrand[number]>();
-    for (const p of sameBrand) {
-      const existing = byName.get(p.flavor);
-      if (!existing) byName.set(p.flavor, p);
-      // prefer one that matches the current product's strength
-      else if (p.strengthMg === product.strengthMg) byName.set(p.flavor, p);
-    }
-    return Array.from(byName.values()).slice(0, 6);
-  })();
-  // Strengths available for the active flavor (so chip clicks switch strength but keep flavor)
-  const strengths = Array.from(
-    new Set(sameBrand.filter((p) => p.flavor === product.flavor).map((p) => p.strengthMg))
+
+  // Strength chips show every strength this brand makes — strength is the
+  // outer filter that narrows what flavors are available below.
+  const strengthsToShow = Array.from(
+    new Set(sameBrand.map((p) => p.strengthMg))
   ).sort((a, b) => a - b);
-  // If the flavor only has one strength, fall back to all available strengths in the brand.
-  const strengthsToShow = strengths.length > 1
-    ? strengths
-    : Array.from(new Set(sameBrand.map((p) => p.strengthMg))).sort((a, b) => a - b).slice(0, 4);
+
+  // Flavor chips are filtered to ONLY flavors available at the currently
+  // selected strength. So the PDP behaves like a mini category page:
+  //   "show me everything {brand} makes at {strength}mg"
+  // If a single flavor has multiple variants at this strength, dedupe by
+  // flavor name — first match wins.
+  const flavors = (() => {
+    const atStrength = sameBrand.filter((p) => p.strengthMg === product.strengthMg);
+    const byName = new Map<string, typeof sameBrand[number]>();
+    for (const p of atStrength) {
+      if (!byName.has(p.flavor)) byName.set(p.flavor, p);
+    }
+    return Array.from(byName.values()).slice(0, 8);
+  })();
+
+  // Switch active product when the user picks a strength chip. Preserve the
+  // current flavor if it exists at the new strength; otherwise jump to the
+  // first product at that strength.
+  const switchStrength = (mg: number) => {
+    const sameFlavor = sameBrand.find((p) => p.strengthMg === mg && p.flavor === product.flavor);
+    if (sameFlavor) return setActiveSlug(sameFlavor.slug);
+    const first = sameBrand.find((p) => p.strengthMg === mg);
+    if (first) setActiveSlug(first.slug);
+  };
 
   useDocumentMeta({
     title: `${brand.name} ${product.flavor} ${product.strengthMg}mg`,
@@ -189,12 +200,18 @@ export default function PDP() {
               </span>
             </div>
 
-            {/* Flavor variant — tighter chip pattern, square, smaller thumb */}
+            {/* Flavor variant — filtered by current strength so the PDP doubles
+                as a brand-strength category page. */}
             <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-mono-eyebrow text-white">FLAVOR · {sameBrand.length} OPTIONS</div>
-                <Link to={`/brands/${brand.slug}`} className="text-accent text-xs underline underline-offset-2">
-                  View all →
+              <div className="flex items-center justify-between mb-3 gap-3">
+                <div className="text-mono-eyebrow text-white">
+                  FLAVOR · {flavors.length} AT {product.strengthMg}MG
+                </div>
+                <Link
+                  to={`/brands/${brand.slug}`}
+                  className="text-accent text-xs underline underline-offset-2 shrink-0"
+                >
+                  See all {sameBrand.length} →
                 </Link>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
@@ -239,26 +256,34 @@ export default function PDP() {
               </div>
             </div>
 
-            {/* Strength variant — square chips, no rounded-pill */}
+            {/* Strength acts as the OUTER filter — pick a strength, the flavor
+                list above re-filters to whatever {brand} makes at that strength. */}
             <div className="mt-6">
-              <div className="text-mono-eyebrow text-white mb-3">STRENGTH</div>
+              <div className="flex items-center justify-between mb-3 gap-3">
+                <div className="text-mono-eyebrow text-white">STRENGTH</div>
+                <span className="text-mono-badge text-ink-secondary">
+                  {strengthsToShow.length} AVAILABLE
+                </span>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {strengthsToShow.map((mg) => {
-                  const sibling = sameBrand.find((p) => p.strengthMg === mg && p.flavor === product.flavor)
-                    || sameBrand.find((p) => p.strengthMg === mg);
                   const selected = mg === product.strengthMg;
+                  const flavorsAtMg = sameBrand.filter((p) => p.strengthMg === mg);
                   return (
                     <button
                       key={mg}
-                      onClick={() => sibling && setActiveSlug(sibling.slug)}
-                      className={`h-11 px-4 border text-mono-badge transition no-tap-highlight ${
+                      onClick={() => switchStrength(mg)}
+                      className={`h-11 px-3.5 border text-mono-badge transition no-tap-highlight inline-flex items-center gap-1.5 ${
                         selected
                           ? 'border-accent text-accent bg-accent/5 shadow-glow-accent-strong'
                           : 'border-edge text-white hover:border-white/40 bg-bg-secondary/40'
                       }`}
                       aria-pressed={selected}
                     >
-                      {mg}mg <span className="text-accent">·</span> {tierLabel(mg).toUpperCase()}
+                      <span>{mg}mg</span>
+                      <span className="text-accent">·</span>
+                      <span>{tierLabel(mg).toUpperCase()}</span>
+                      <span className="text-ink-muted ml-1">({flavorsAtMg.length})</span>
                     </button>
                   );
                 })}
