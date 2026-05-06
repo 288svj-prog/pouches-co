@@ -111,7 +111,8 @@ export function CartDrawer() {
 
             {/* SCROLLABLE BODY */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
-              {/* ITEMS LIST */}
+              {/* ITEMS LIST — rigid grid: every row is exactly the thumb's height
+                  (96px), so the whole list reads as a clean stack. */}
               <ul className="divide-y divide-edge-muted">
                 {items.map((it) => {
                   const brand = brandBySlug(it.brandSlug);
@@ -120,7 +121,7 @@ export function CartDrawer() {
                   return (
                     <li
                       key={it.productSlug}
-                      className={`relative flex gap-3 sm:gap-4 p-4 sm:px-5 transition ${
+                      className={`relative grid grid-cols-[88px_1fr] sm:grid-cols-[96px_1fr] gap-3 sm:gap-4 p-4 sm:px-5 transition ${
                         it.justAdded ? 'bg-accent/[0.03]' : ''
                       }`}
                     >
@@ -128,8 +129,8 @@ export function CartDrawer() {
                         <span aria-hidden className="absolute left-0 top-0 bottom-0 w-0.5 bg-accent" />
                       )}
 
-                      {/* Thumb */}
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border border-edge-muted">
+                      {/* Thumb — fixed dimensions */}
+                      <div className="relative w-[88px] h-[88px] sm:w-24 sm:h-24 overflow-hidden border border-edge-muted">
                         <Tin
                           brand={brand?.name || ''}
                           swatch={it.swatch}
@@ -149,13 +150,15 @@ export function CartDrawer() {
                         />
                       </div>
 
-                      {/* Body */}
-                      <div className="flex-1 min-w-0 flex flex-col">
-                        <div className="flex items-start justify-between gap-2">
+                      {/* Body — 2-row grid (top: meta+price; bottom: qty+remove)
+                          with min-height matching the thumb so rows always align. */}
+                      <div className="min-w-0 grid grid-rows-[1fr_auto] min-h-[88px] sm:min-h-24 gap-2">
+                        {/* TOP: brand + name + variant on left, price stack on right */}
+                        <div className="grid grid-cols-[1fr_auto] gap-2 min-w-0">
                           <div className="min-w-0">
                             <div className="text-mono-badge text-ink-secondary leading-none">{brand?.name}</div>
-                            <h3 className="text-white font-bold text-[15px] leading-tight mt-1 truncate">{it.name}</h3>
-                            <div className="text-xs text-ink-secondary mt-0.5">{it.variant}</div>
+                            <h3 className="text-white font-bold text-[15px] leading-tight mt-1.5 truncate">{it.name}</h3>
+                            <div className="text-[11px] text-ink-secondary mt-1">{it.variant}</div>
                           </div>
                           <div className="text-right shrink-0">
                             {original && (
@@ -163,37 +166,37 @@ export function CartDrawer() {
                                 ${(original * it.qty).toFixed(2)}
                               </div>
                             )}
-                            <div className={`font-bold text-base leading-tight ${it.byo ? 'text-accent' : 'text-white'}`}>
+                            <div className={`font-bold text-base leading-tight tabular-nums ${it.byo ? 'text-accent mt-1' : 'text-white'}`}>
                               ${(display * it.qty).toFixed(2)}
                             </div>
                             {it.qty > 1 && (
-                              <div className="text-[10px] text-ink-secondary mt-0.5">${display.toFixed(2)} each</div>
+                              <div className="text-[10px] text-ink-secondary mt-0.5 tabular-nums">${display.toFixed(2)} ea</div>
                             )}
                           </div>
                         </div>
 
-                        {/* Qty stepper + remove */}
-                        <div className="mt-auto pt-2.5 flex items-center justify-between">
-                          <div className="flex items-center border border-edge h-9">
+                        {/* BOTTOM: qty stepper + remove — both h-8, identical baseline */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center border border-edge h-8">
                             <button
                               onClick={() => updateQty(it.productSlug, it.qty - 1)}
-                              className="w-9 h-9 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
+                              className="w-8 h-8 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
                               aria-label={`Decrease ${it.name}`}
                             >
-                              <Minus size={13} strokeWidth={2.5} />
+                              <Minus size={12} strokeWidth={2.5} />
                             </button>
-                            <span className="w-8 text-center text-white text-sm font-bold tabular-nums">{it.qty}</span>
+                            <span className="w-7 text-center text-white text-sm font-bold tabular-nums">{it.qty}</span>
                             <button
                               onClick={() => updateQty(it.productSlug, it.qty + 1)}
-                              className="w-9 h-9 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
+                              className="w-8 h-8 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
                               aria-label={`Increase ${it.name}`}
                             >
-                              <Plus size={13} strokeWidth={2.5} />
+                              <Plus size={12} strokeWidth={2.5} />
                             </button>
                           </div>
                           <button
                             onClick={() => remove(it.productSlug)}
-                            className="text-xs text-ink-secondary hover:text-danger transition py-1.5 px-1 -mr-1"
+                            className="h-8 inline-flex items-center text-[11px] text-ink-secondary hover:text-danger transition px-1 -mr-1 font-mono uppercase tracking-wider"
                           >
                             Remove
                           </button>

@@ -74,43 +74,49 @@ export default function BYO() {
         <div className="grid lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
           {/* LEFT - product picker grid */}
           <div>
-            {/* Toolbar: segmented strength filter on the left, sort on the right */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-y border-edge-muted py-3">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <span className="text-mono-eyebrow text-accent shrink-0">STRENGTH</span>
-                {/* Segment-control: 5 contiguous cells (ALL + 4 tiers), no rounded corners */}
-                <div className="flex border border-edge overflow-x-auto scrollbar-hide" role="tablist" aria-label="Strength filter">
-                  <button
-                    onClick={() => setStrengthFilter(null)}
-                    className={`shrink-0 h-9 px-3 text-[11px] font-bold uppercase tracking-wider border-r border-edge last:border-r-0 transition no-tap-highlight ${
-                      strengthFilter === null
-                        ? 'bg-accent text-accent-on'
-                        : 'text-white hover:bg-white/[0.03]'
-                    }`}
-                    aria-pressed={strengthFilter === null}
-                  >
-                    ALL
-                  </button>
-                  {(['light', 'regular', 'strong', 'x-strong'] as const).map((s) => {
-                    const active = strengthFilter === s;
-                    const labelMap = { light: 'LIGHT', regular: 'REGULAR', strong: 'STRONG', 'x-strong': 'X-STRONG' };
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => setStrengthFilter(active ? null : s)}
-                        className={`shrink-0 h-9 px-3 text-[11px] font-bold uppercase tracking-wider border-r border-edge last:border-r-0 transition no-tap-highlight ${
-                          active ? 'bg-accent text-accent-on' : 'text-white hover:bg-white/[0.03]'
-                        }`}
-                        aria-pressed={active}
-                      >
-                        {labelMap[s]}
-                      </button>
-                    );
-                  })}
-                </div>
+            {/* Toolbar — mobile: stacked (label+sort on row 1, segments on row 2);
+                desktop: single row with segments inline. */}
+            <div className="mb-5 border-y border-edge-muted">
+              {/* Top row: STRENGTH label + SORT readout (always one line) */}
+              <div className="flex items-center justify-between px-0.5 py-2.5">
+                <span className="text-mono-eyebrow text-accent">STRENGTH</span>
+                <span className="text-mono-badge text-ink-secondary">
+                  <span className="text-ink-muted">SORT </span>BESTSELLERS
+                </span>
               </div>
-              <div className="text-mono-badge text-ink-secondary shrink-0">
-                <span className="hidden sm:inline">SORT: </span>BESTSELLERS
+              {/* Segment-control: 5 contiguous cells, full-width on mobile, scrolls if cramped */}
+              <div
+                className="flex border-t border-edge-muted overflow-x-auto scrollbar-hide"
+                role="tablist"
+                aria-label="Strength filter"
+              >
+                <button
+                  onClick={() => setStrengthFilter(null)}
+                  className={`flex-1 shrink-0 min-w-[72px] h-10 px-3 text-[11px] font-bold uppercase tracking-wider border-r border-edge-muted last:border-r-0 transition no-tap-highlight ${
+                    strengthFilter === null
+                      ? 'bg-accent text-accent-on'
+                      : 'text-white hover:bg-white/[0.03]'
+                  }`}
+                  aria-pressed={strengthFilter === null}
+                >
+                  ALL
+                </button>
+                {(['light', 'regular', 'strong', 'x-strong'] as const).map((s) => {
+                  const active = strengthFilter === s;
+                  const labelMap = { light: 'LIGHT', regular: 'REGULAR', strong: 'STRONG', 'x-strong': 'X-STRONG' };
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setStrengthFilter(active ? null : s)}
+                      className={`flex-1 shrink-0 min-w-[80px] h-10 px-3 text-[11px] font-bold uppercase tracking-wider border-r border-edge-muted last:border-r-0 transition no-tap-highlight ${
+                        active ? 'bg-accent text-accent-on' : 'text-white hover:bg-white/[0.03]'
+                      }`}
+                      aria-pressed={active}
+                    >
+                      {labelMap[s]}
+                    </button>
+                  );
+                })}
               </div>
             </div>
 

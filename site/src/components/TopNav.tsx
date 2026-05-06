@@ -1,9 +1,10 @@
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { Menu, ShoppingBag, User, Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Wordmark } from './Wordmark';
 import { useCart, selectItemCount } from '../store/cart';
 import { UtilityBar } from './UtilityBar';
+import { SearchDropdown } from './SearchDropdown';
 
 export function TopNav({
   onOpenMenu,
@@ -15,7 +16,14 @@ export function TopNav({
   const cartCount = useCart((s) => selectItemCount(s.items));
   const openCart = useCart((s) => s.openDrawer);
   const [scrolled, setScrolled] = useState(false);
+  const [desktopSearch, setDesktopSearch] = useState(false);
+  const desktopSearchBtnRef = useRef<HTMLButtonElement | null>(null);
   const { pathname } = useLocation();
+
+  // Close the desktop search dropdown whenever the route changes.
+  useEffect(() => {
+    setDesktopSearch(false);
+  }, [pathname]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
@@ -99,9 +107,13 @@ export function TopNav({
               <Search size={20} strokeWidth={2} />
             </button>
             <button
-              onClick={onOpenSearch}
-              className="hidden md:flex items-center gap-1.5 hover:text-accent transition tracking-widest"
+              ref={desktopSearchBtnRef}
+              onClick={() => setDesktopSearch((v) => !v)}
+              className={`hidden md:flex items-center gap-1.5 hover:text-accent transition tracking-widest ${
+                desktopSearch ? 'text-accent' : ''
+              }`}
               aria-label="Search"
+              aria-expanded={desktopSearch}
             >
               SEARCH
             </button>
@@ -124,6 +136,14 @@ export function TopNav({
           </div>
         </div>
       )}
+      {/* Desktop search dropdown — anchored to the nav row, hidden on mobile */}
+      <div className="hidden md:block">
+        <SearchDropdown
+          open={desktopSearch}
+          onClose={() => setDesktopSearch(false)}
+          anchorRef={desktopSearchBtnRef}
+        />
+      </div>
     </header>
   );
 }
