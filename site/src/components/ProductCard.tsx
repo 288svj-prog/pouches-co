@@ -102,7 +102,7 @@ export function ProductCard({ product, byo }: { product: Product; byo?: boolean 
         {/* Mobile-only floating quick-add button — overlaid on the bottom-right of the image */}
         <button
           onClick={handleAdd}
-          className="md:hidden absolute bottom-3 right-3 z-20 w-11 h-11 bg-accent text-accent-on flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.5)] active:scale-90 transition-transform no-tap-highlight"
+          className="md:hidden absolute bottom-3 right-3 z-[5] w-11 h-11 bg-accent text-accent-on flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.5)] active:scale-90 transition-transform no-tap-highlight"
           aria-label={`Add ${product.flavor} to bag`}
         >
           <Plus size={20} strokeWidth={3} />

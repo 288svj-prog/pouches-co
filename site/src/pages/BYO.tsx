@@ -234,7 +234,7 @@ export default function BYO() {
       <div className="lg:hidden h-24" />
 
       {/* MOBILE STICKY PROGRESS BAR */}
-      <div className="lg:hidden fixed left-0 right-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]" style={{ bottom: 64 }}>
+      <div className="lg:hidden fixed left-0 right-0 bottom-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] pb-[env(safe-area-inset-bottom)]">
         <button
           onClick={() => setMobileBoxOpen(true)}
           className="w-full px-4 py-3 flex items-center gap-3"

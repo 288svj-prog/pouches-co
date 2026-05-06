@@ -95,7 +95,7 @@ export default function Shop() {
           {/* Right side */}
           <div>
             {/* mobile filter / sort bar */}
-            <div className="md:hidden sticky top-[88px] z-20 bg-bg-primary -mx-4 px-4 py-3 border-y border-edge-muted flex items-center gap-2">
+            <div className="md:hidden sticky top-[88px] z-30 bg-bg-primary -mx-4 px-4 py-3 border-y border-edge-muted flex items-center gap-2">
               <button
                 onClick={() => setFilterDrawer(true)}
                 className="flex-1 h-10 rounded-pill border border-edge text-white text-mono-badge flex items-center justify-center gap-1.5"
