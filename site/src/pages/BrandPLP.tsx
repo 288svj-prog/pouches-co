@@ -8,6 +8,7 @@ import { Eyebrow, StatStrip } from '../components/Eyebrow';
 import { ProductCard } from '../components/ProductCard';
 import { BRAND_IMAGES, productImage } from '../data/images';
 import { BrandLogo } from '../components/BrandLogo';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 export default function BrandPLP() {
   const { slug = '' } = useParams();
@@ -16,6 +17,19 @@ export default function BrandPLP() {
   if (!brand) return <Navigate to="/brands" replace />;
   const list = productsByBrand(brand.slug);
   const others = brands.filter((b) => b.slug !== brand.slug).slice(0, 4);
+
+  useDocumentMeta({
+    title: `${brand.name} pouches — ${list.length} flavors, shipped worldwide`,
+    description: `${brand.description} ${brand.name} ships from Uppsala to 47 countries. Est. ${brand.est} · ${brand.city}.`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Brand',
+      name: brand.name,
+      description: brand.description,
+      foundingDate: brand.est,
+      foundingLocation: brand.city,
+    },
+  });
 
   return (
     <div className="bg-bg-primary">
@@ -104,7 +118,7 @@ export default function BrandPLP() {
                   <BrandLogo
                     brandSlug={b.slug}
                     height={48}
-                    color={b.textOnSwatch}
+                    color="#FFFFFF"
                     ariaLabel={`${b.name} wordmark`}
                     className="md:!h-16 transition-transform duration-base group-hover:scale-105"
                   />

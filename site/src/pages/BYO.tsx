@@ -1,19 +1,25 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Check, X } from 'lucide-react';
+import { Plus, Check, X, ChevronUp, Package } from 'lucide-react';
 import { products } from '../data/products';
 import { Tin } from '../components/Tin';
 import { productImage } from '../data/images';
 import { brandBySlug } from '../data/brands';
 import { Eyebrow } from '../components/Eyebrow';
 import { useCart, BYO_CONFIG } from '../store/cart';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 export default function BYO() {
+  useDocumentMeta({
+    title: 'Build a Box — mix any 6 pouches, save 15%',
+    description: 'Pick six pouches from any Swedish brand. Any flavor, any strength. We assemble and ship from Uppsala. Free worldwide shipping over $49.',
+  });
   const items = useCart((s) => s.items);
   const add = useCart((s) => s.add);
   const remove = useCart((s) => s.remove);
   const navigate = useNavigate();
   const [strengthFilter, setStrengthFilter] = useState<string | null>(null);
+  const [mobileBoxOpen, setMobileBoxOpen] = useState(false);
   const byoItems = useMemo(() => items.filter((i) => i.byo), [items]);
   const byoCount = byoItems.reduce((s, i) => s + i.qty, 0);
   const byoTotal = byoItems.reduce((s, i) => s + i.price * i.qty, 0);
@@ -126,8 +132,8 @@ export default function BYO() {
             </div>
           </div>
 
-          {/* RIGHT - sticky summary */}
-          <aside className="lg:sticky lg:top-32 self-start bg-bg-secondary border border-edge rounded-card overflow-hidden">
+          {/* RIGHT - sticky summary (desktop only — mobile uses sticky bottom bar) */}
+          <aside className="hidden lg:block lg:sticky lg:top-32 self-start bg-bg-secondary border border-edge overflow-hidden">
             <div className="p-5 border-b border-edge-muted">
               <div className="text-mono-eyebrow text-accent">YOUR BOX</div>
               <div className="text-white font-display italic text-3xl mt-1 leading-none">
@@ -223,6 +229,142 @@ export default function BYO() {
           </aside>
         </div>
       </div>
+
+      {/* Mobile spacer so the sticky bottom bar doesn't cover the last row of the grid */}
+      <div className="lg:hidden h-24" />
+
+      {/* MOBILE STICKY PROGRESS BAR */}
+      <div className="lg:hidden fixed left-0 right-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]" style={{ bottom: 64 }}>
+        <button
+          onClick={() => setMobileBoxOpen(true)}
+          className="w-full px-4 py-3 flex items-center gap-3"
+          aria-label={`View your box, ${byoCount} of 6 pouches`}
+        >
+          {/* Progress dots */}
+          <div className="flex gap-1 shrink-0">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <span
+                key={i}
+                className={`block w-2 h-6 ${i < byoCount ? 'bg-accent' : 'bg-edge'}`}
+              />
+            ))}
+          </div>
+          <div className="flex-1 min-w-0 text-left">
+            <div className="text-mono-badge text-accent leading-none">
+              {byoCount >= 6 ? '15% UNLOCKED' : `${6 - byoCount} TO GO`}
+            </div>
+            <div className="text-white text-sm font-bold mt-1 truncate">
+              {byoCount} of 6 · ${liveTotal.toFixed(2)}
+              {discount > 0 && <span className="text-accent ml-1">(−${discount.toFixed(2)})</span>}
+            </div>
+          </div>
+          <ChevronUp size={18} className="text-white shrink-0" />
+        </button>
+      </div>
+
+      {/* MOBILE BOX BOTTOM-SHEET */}
+      {mobileBoxOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setMobileBoxOpen(false)} />
+          <div className="absolute left-0 right-0 bottom-0 max-h-[85vh] bg-bg-primary border-t border-accent/40 flex flex-col animate-slide-up">
+            <div className="pt-2 pb-1 flex justify-center">
+              <span className="w-10 h-1 bg-edge rounded-full" />
+            </div>
+            <div className="px-4 pb-3 flex items-center justify-between border-b border-edge-muted">
+              <div className="flex items-center gap-2">
+                <Package size={16} className="text-accent" strokeWidth={2} />
+                <span className="text-mono-eyebrow text-white">YOUR BOX · {byoCount} OF 6</span>
+              </div>
+              <button onClick={() => setMobileBoxOpen(false)} className="p-1 -mr-1" aria-label="Close">
+                <X size={18} className="text-white" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {/* 2x3 grid of slots */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                {Array.from({ length: 6 }, (_, i) => {
+                  const it = byoItems[i];
+                  if (it) {
+                    const brand = brandBySlug(it.brandSlug);
+                    return (
+                      <div key={i} className="relative aspect-square overflow-hidden border border-accent/40">
+                        <Tin
+                          brand={brand?.name || ''}
+                          swatch={it.swatch}
+                          textColor={it.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                          surface={brand?.surface || 'concrete'}
+                          size={120}
+                          image={productImage(it.productSlug, it.brandSlug)}
+                        />
+                        <button
+                          onClick={() => remove(it.productSlug)}
+                          className="absolute top-1 right-1 w-6 h-6 bg-bg-primary border border-edge flex items-center justify-center"
+                          aria-label="Remove"
+                        >
+                          <X size={11} className="text-white" />
+                        </button>
+                        <span
+                          className="absolute left-0 right-0 bottom-0 h-1"
+                          style={{ background: it.swatch }}
+                        />
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={i}
+                      className="aspect-square border border-dashed border-edge flex items-center justify-center text-edge"
+                    >
+                      <Plus size={20} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Price breakdown */}
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-secondary">Subtotal ({byoCount} items)</span>
+                  <span className="text-white tabular-nums">${byoTotal.toFixed(2)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-ink-secondary">Box discount (15%)</span>
+                  <span className={discount > 0 ? 'text-accent tabular-nums' : 'text-ink-muted'}>
+                    {discount > 0 ? `−$${discount.toFixed(2)}` : 'Unlocks at 6'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mt-2 pt-3 border-t border-edge-muted">
+                  <span className="text-mono-eyebrow text-white">TOTAL</span>
+                  <span className="text-white font-bold text-lg tabular-nums">${liveTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky CTA */}
+            <div className="border-t border-edge-muted p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-2 shrink-0">
+              <button
+                disabled={byoCount < 6}
+                onClick={() => {
+                  setMobileBoxOpen(false);
+                  navigate('/checkout');
+                }}
+                className="w-full h-13 py-3 bg-accent text-accent-on font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-105 transition"
+              >
+                {byoCount >= 6
+                  ? `CHECKOUT · $${liveTotal.toFixed(2)}`
+                  : `ADD ${6 - byoCount} MORE TO CHECKOUT`}
+              </button>
+              <button
+                onClick={() => setMobileBoxOpen(false)}
+                className="w-full h-11 text-ink-secondary text-sm hover:text-white transition"
+              >
+                Keep building
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

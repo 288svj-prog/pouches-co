@@ -1,0 +1,8 @@
+# Pouches.co — every Swedish brand. One checkout.
+User-agent: *
+Allow: /
+Disallow: /checkout
+Disallow: /account
+Disallow: /api/
+
+Sitemap: https://pouches.co/sitemap.xml

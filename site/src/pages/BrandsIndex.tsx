@@ -4,8 +4,13 @@ import { brands } from '../data/brands';
 import { products } from '../data/products';
 import { Eyebrow } from '../components/Eyebrow';
 import { BrandLogo } from '../components/BrandLogo';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 export default function BrandsIndex() {
+  useDocumentMeta({
+    title: `${brands.length} Swedish nicotine pouch brands — every shelf, one checkout`,
+    description: `Browse every Swedish nicotine pouch brand we stock — ZYN, VELO, ACE, ICEBERG, FUMI, LOOP, NORDIC SPIRIT, KILLA, SKRUF, HELWIT, PABLO, WHITE FOX. Direct from Uppsala.`,
+  });
   return (
     <div className="bg-bg-primary">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-16">
@@ -44,7 +49,7 @@ export default function BrandsIndex() {
                 <BrandLogo
                   brandSlug={b.slug}
                   height={64}
-                  color={b.textOnSwatch}
+                  color="#FFFFFF"
                   ariaLabel={`${b.name} wordmark`}
                   className="md:!h-20 lg:!h-24 transition-transform duration-base group-hover:scale-105"
                 />

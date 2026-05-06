@@ -7,6 +7,7 @@ import { brands } from '../data/brands';
 import { ProductCard } from '../components/ProductCard';
 import { Eyebrow } from '../components/Eyebrow';
 import { FilterChip } from '../components/Chips';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 type SortKey = 'bestsellers' | 'newest' | 'price-asc' | 'price-desc' | 'strength-asc' | 'strength-desc' | 'top-rated';
 const SORT_LABEL: Record<SortKey, string> = {
@@ -45,6 +46,11 @@ export default function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [filterDrawer, setFilterDrawer] = useState(false);
   const [sortDrawer, setSortDrawer] = useState(false);
+
+  useDocumentMeta({
+    title: `Shop all nicotine pouches — ${totalProductCount} products from ${brands.length} Swedish brands`,
+    description: `Every Swedish nicotine pouch we stock — ZYN, VELO, ACE, ICEBERG, FUMI, KILLA and more. Filter by strength, flavor, or format. Free worldwide shipping over $49.`,
+  });
 
   const activeFilters = parseFilters(searchParams);
   const sort = (searchParams.get('sort') as SortKey) || 'bestsellers';

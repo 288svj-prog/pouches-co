@@ -11,6 +11,7 @@ import { Stars } from '../components/Stars';
 import { Eyebrow } from '../components/Eyebrow';
 import { PillBadge, SelectableChip } from '../components/Chips';
 import { useCart } from '../store/cart';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 
 export default function PDP() {
   const { slug = '' } = useParams();
@@ -48,6 +49,33 @@ export default function PDP() {
   const strengthsToShow = strengths.length > 1
     ? strengths
     : Array.from(new Set(sameBrand.map((p) => p.strengthMg))).sort((a, b) => a - b).slice(0, 4);
+
+  useDocumentMeta({
+    title: `${brand.name} ${product.flavor} ${product.strengthMg}mg`,
+    description: `${brand.name} ${product.flavor} — ${product.strengthMg}mg ${product.strengthTier} nicotine pouches. ${product.pouchesPerRoll} pouches per roll, ~${product.durationMinutes} minute burn. Tobacco-free. Shipped from Uppsala.`,
+    ogType: 'product',
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: `${brand.name} ${product.flavor} ${product.strengthMg}mg`,
+      description: product.description,
+      brand: { '@type': 'Brand', name: brand.name },
+      sku: product.slug,
+      image: typeof window !== 'undefined' ? `${window.location.origin}${productImage(product.slug, product.brandSlug) || ''}` : undefined,
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.rating.toFixed(1),
+        reviewCount: product.reviews,
+      },
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'USD',
+        price: product.price.toFixed(2),
+        availability: 'https://schema.org/InStock',
+        url: typeof window !== 'undefined' ? window.location.href : undefined,
+      },
+    },
+  });
 
   return (
     <div className="bg-bg-primary">

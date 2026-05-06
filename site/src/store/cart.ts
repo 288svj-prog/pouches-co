@@ -21,7 +21,7 @@ const BYO_DISCOUNT_RATE = 0.15;
 type State = {
   items: CartItem[];
   drawerOpen: boolean;
-  add: (p: Product, qty?: number, opts?: { byo?: boolean }) => void;
+  add: (p: Product, qty?: number, opts?: { byo?: boolean; silent?: boolean }) => void;
   remove: (productSlug: string) => void;
   updateQty: (productSlug: string, qty: number) => void;
   openDrawer: () => void;
@@ -36,6 +36,9 @@ export const useCart = create<State>()(
       items: [],
       drawerOpen: false,
       add: (p, qty = 1, opts) => {
+        // BYO additions and explicit silent calls don't auto-open the drawer.
+        // The user is on /build with their own progress UI; the drawer is noisy.
+        const shouldOpen = !opts?.byo && !opts?.silent;
         set((s) => {
           const existingIdx = s.items.findIndex((i) => i.productSlug === p.slug);
           let next: CartItem[];
@@ -59,7 +62,7 @@ export const useCart = create<State>()(
               },
             ];
           }
-          return { items: next, drawerOpen: true };
+          return shouldOpen ? { items: next, drawerOpen: true } : { items: next };
         });
         setTimeout(() => {
           set((s) => ({ items: s.items.map((i) => ({ ...i, justAdded: false })) }));

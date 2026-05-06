@@ -13,9 +13,25 @@ import { useState } from 'react';
 import { brandBySlug } from '../data/brands';
 import { HERO_IMAGES, QUIZ_ICONS, productImage } from '../data/images';
 import { BrandLogo } from '../components/BrandLogo';
+import { useDocumentMeta } from '../lib/useDocumentMeta';
 // HERO_IMAGES is consumed by the slide config inside Hero(); keep the import.
 
 export default function Home() {
+  useDocumentMeta({
+    title: 'Every Swedish nicotine pouch brand. One checkout.',
+    description: `${totalProductCount} pouches across ${brands.length} Swedish brands — ZYN, VELO, ACE, ICEBERG, FUMI, KILLA and more. Shipped from Uppsala to 47 countries. Build a Box, save 15%.`,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'POUCHES',
+      url: 'https://pouches.co',
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: 'https://pouches.co/shop?q={search_term_string}',
+        'query-input': 'required name=search_term_string',
+      },
+    },
+  });
   return (
     <>
       <Hero />
@@ -98,7 +114,48 @@ function Hero() {
         </div>
         <div className="absolute bottom-0 inset-x-0 h-px bg-accent/30 pointer-events-none" />
       </div>
+
+      {/* Brand logo marquee — every brand we stock, single row across all viewports */}
+      <BrandStrip />
     </>
+  );
+}
+
+function BrandStrip() {
+  return (
+    <div className="bg-bg-primary border-b border-edge-muted">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-5 md:py-8">
+        <div className="flex items-center gap-3 mb-4">
+          <span aria-hidden className="h-px w-8 md:w-12 bg-accent/50" />
+          <span className="text-mono-eyebrow text-accent shrink-0">EVERY BRAND WE STOCK</span>
+          <span aria-hidden className="flex-1 h-px bg-accent/30" />
+          <Link to="/brands" className="hidden md:inline-flex items-center gap-1 text-mono-badge text-white hover:text-accent transition shrink-0">
+            VIEW ALL <ArrowRight size={11} />
+          </Link>
+        </div>
+        {/* Single-row strip — wraps to allow logos to flex at small viewports */}
+        <Link
+          to="/brands"
+          className="grid grid-cols-12 items-center gap-2 sm:gap-4 md:gap-6 lg:gap-8 group"
+          aria-label="Browse all brands"
+        >
+          {brands.map((b) => (
+            <span
+              key={b.slug}
+              className="flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity duration-fast"
+            >
+              <BrandLogo
+                brandSlug={b.slug}
+                height={18}
+                color="#FFFFFF"
+                ariaLabel={b.name}
+                className="sm:!h-6 md:!h-8 lg:!h-10"
+              />
+            </span>
+          ))}
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -279,7 +336,7 @@ function BrandWall() {
                 <BrandLogo
                   brandSlug={b.slug}
                   height={56}
-                  color={b.textOnSwatch}
+                  color="#FFFFFF"
                   ariaLabel={`${b.name} wordmark`}
                   className="md:!h-20 transition-transform duration-base group-hover:scale-105"
                 />
