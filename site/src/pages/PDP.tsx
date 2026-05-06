@@ -418,7 +418,7 @@ export default function PDP() {
       </div>
 
       {/* Mobile sticky bottom CTA bar — sits above the bottom nav */}
-      <div className="md:hidden fixed left-0 right-0 bottom-0 z-30 bg-bg-primary border-t border-accent/40 pb-[env(safe-area-inset-bottom)]">
+      <div className="md:hidden fixed left-0 right-0 z-30 bg-bg-primary border-t border-accent/40" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         <div className="px-4 h-20 flex items-center gap-3">
           <div className="w-[30%] flex flex-col">
             <span className="text-mono-badge text-ink-secondary">TOTAL</span>

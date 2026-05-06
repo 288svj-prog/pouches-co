@@ -14,6 +14,7 @@ import { brandBySlug } from '../data/brands';
 import { HERO_IMAGES, QUIZ_ICONS, productImage } from '../data/images';
 import { BrandLogo } from '../components/BrandLogo';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
+import { useReveal } from '../lib/useReveal';
 // HERO_IMAGES is consumed by the slide config inside Hero(); keep the import.
 
 export default function Home() {
@@ -122,8 +123,9 @@ function Hero() {
 }
 
 function BrandStrip() {
+  const ref = useReveal<HTMLDivElement>({ stagger: true, childSelector: '.brand-strip-item', each: 50 });
   return (
-    <div className="bg-bg-primary border-b border-edge-muted">
+    <div ref={ref} className="bg-bg-primary border-b border-edge-muted">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-5 md:py-8">
         <div className="flex items-center gap-3 mb-4">
           <span aria-hidden className="h-px w-8 md:w-12 bg-accent/50" />
@@ -142,7 +144,8 @@ function BrandStrip() {
           {brands.map((b) => (
             <span
               key={b.slug}
-              className="flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity duration-fast"
+              className="brand-strip-item flex items-center justify-center transition-transform duration-fast hover:scale-110"
+              style={{ opacity: 0 }}
             >
               <BrandLogo
                 brandSlug={b.slug}

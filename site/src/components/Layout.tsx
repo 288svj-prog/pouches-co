@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { TopNav } from './TopNav';
 import { Footer } from './Footer';
+import { BottomNav } from './BottomNav';
 import { CartDrawer } from './CartDrawer';
 import { MobileMenu } from './MobileMenu';
 import { SearchOverlay } from './SearchOverlay';
@@ -31,8 +32,13 @@ export function Layout() {
       </main>
       {!isCheckout && <Footer />}
       {!isCheckout && <CartDrawer />}
+      {!isCheckout && <BottomNav />}
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       <SearchOverlay open={search} onClose={() => setSearch(false)} />
+      {/* mobile bottom-nav reserved space (64px + safe-area inset) */}
+      {!isCheckout && (
+        <div className="md:hidden h-16 pb-[env(safe-area-inset-bottom)]" aria-hidden />
+      )}
     </div>
   );
 }

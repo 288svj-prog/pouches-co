@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Check, X, ChevronUp, Package } from 'lucide-react';
+import { celebrate, flashAccent } from '../lib/anim';
 import { products } from '../data/products';
 import { Tin } from '../components/Tin';
 import { productImage } from '../data/images';
@@ -20,6 +21,11 @@ export default function BYO() {
   const navigate = useNavigate();
   const [strengthFilter, setStrengthFilter] = useState<string | null>(null);
   const [mobileBoxOpen, setMobileBoxOpen] = useState(false);
+
+  // Refs for celebration animation when box hits 6/6
+  const desktopBoxRef = useRef<HTMLElement | null>(null);
+  const mobileBarRef = useRef<HTMLDivElement | null>(null);
+  const lastByoCount = useRef(0);
   const byoItems = useMemo(() => items.filter((i) => i.byo), [items]);
   const byoCount = byoItems.reduce((s, i) => s + i.qty, 0);
   const byoTotal = byoItems.reduce((s, i) => s + i.price * i.qty, 0);
@@ -30,6 +36,18 @@ export default function BYO() {
     if (!strengthFilter) return products;
     return products.filter((p) => p.strengthTier === strengthFilter);
   }, [strengthFilter]);
+
+  // Celebrate when the box transitions from <6 to ≥6
+  useEffect(() => {
+    if (byoCount >= 6 && lastByoCount.current < 6) {
+      if (desktopBoxRef.current) celebrate(desktopBoxRef.current);
+      if (mobileBarRef.current) {
+        celebrate(mobileBarRef.current);
+        flashAccent(mobileBarRef.current);
+      }
+    }
+    lastByoCount.current = byoCount;
+  }, [byoCount]);
 
   const headline = byoCount === 0 ? 'Build your box.' : byoCount < 6 ? 'Half built.' : 'Box ready.';
   const sub =
@@ -51,20 +69,44 @@ export default function BYO() {
         <div className="grid lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
           {/* LEFT - product picker grid */}
           <div>
-            <div className="flex flex-wrap items-center gap-2 mb-6">
-              <span className="text-mono-eyebrow text-accent">FILTER:</span>
-              {['light', 'regular', 'strong', 'x-strong'].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStrengthFilter(strengthFilter === s ? null : s)}
-                  className={`px-4 py-2 rounded-pill border text-mono-badge transition ${
-                    strengthFilter === s ? 'border-accent text-accent' : 'border-edge text-white hover:border-white/40'
-                  }`}
-                >
-                  STRENGTH: {s.toUpperCase()} {strengthFilter === s && <X size={11} className="inline ml-1" />}
-                </button>
-              ))}
-              <span className="ml-auto text-mono-badge text-ink-secondary">SORT: BESTSELLERS</span>
+            {/* Toolbar: segmented strength filter on the left, sort on the right */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-5 border-y border-edge-muted py-3">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <span className="text-mono-eyebrow text-accent shrink-0">STRENGTH</span>
+                {/* Segment-control: 5 contiguous cells (ALL + 4 tiers), no rounded corners */}
+                <div className="flex border border-edge overflow-x-auto scrollbar-hide" role="tablist" aria-label="Strength filter">
+                  <button
+                    onClick={() => setStrengthFilter(null)}
+                    className={`shrink-0 h-9 px-3 text-[11px] font-bold uppercase tracking-wider border-r border-edge last:border-r-0 transition no-tap-highlight ${
+                      strengthFilter === null
+                        ? 'bg-accent text-accent-on'
+                        : 'text-white hover:bg-white/[0.03]'
+                    }`}
+                    aria-pressed={strengthFilter === null}
+                  >
+                    ALL
+                  </button>
+                  {(['light', 'regular', 'strong', 'x-strong'] as const).map((s) => {
+                    const active = strengthFilter === s;
+                    const labelMap = { light: 'LIGHT', regular: 'REGULAR', strong: 'STRONG', 'x-strong': 'X-STRONG' };
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => setStrengthFilter(active ? null : s)}
+                        className={`shrink-0 h-9 px-3 text-[11px] font-bold uppercase tracking-wider border-r border-edge last:border-r-0 transition no-tap-highlight ${
+                          active ? 'bg-accent text-accent-on' : 'text-white hover:bg-white/[0.03]'
+                        }`}
+                        aria-pressed={active}
+                      >
+                        {labelMap[s]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="text-mono-badge text-ink-secondary shrink-0">
+                <span className="hidden sm:inline">SORT: </span>BESTSELLERS
+              </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -107,7 +149,7 @@ export default function BYO() {
                       </div>
                       <button
                         onClick={() => (inBox ? remove(p.slug) : add(p, 1, { byo: true }))}
-                        className={`mt-3 w-full h-10 rounded-pill text-mono-badge font-bold tracking-wider transition flex items-center justify-center gap-1.5 ${
+                        className={`mt-3 w-full h-10 text-[11px] font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 ${
                           inBox
                             ? 'bg-accent text-accent-on'
                             : 'border border-white text-white hover:bg-white/5'
@@ -133,7 +175,7 @@ export default function BYO() {
           </div>
 
           {/* RIGHT - sticky summary (desktop only — mobile uses sticky bottom bar) */}
-          <aside className="hidden lg:block lg:sticky lg:top-32 self-start bg-bg-secondary border border-edge overflow-hidden">
+          <aside ref={desktopBoxRef} className="hidden lg:block lg:sticky lg:top-32 self-start bg-bg-secondary border border-edge overflow-hidden">
             <div className="p-5 border-b border-edge-muted">
               <div className="text-mono-eyebrow text-accent">YOUR BOX</div>
               <div className="text-white font-display italic text-3xl mt-1 leading-none">
@@ -234,7 +276,7 @@ export default function BYO() {
       <div className="lg:hidden h-24" />
 
       {/* MOBILE STICKY PROGRESS BAR */}
-      <div className="lg:hidden fixed left-0 right-0 bottom-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)] pb-[env(safe-area-inset-bottom)]">
+      <div ref={mobileBarRef} className="lg:hidden fixed left-0 right-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
         <button
           onClick={() => setMobileBoxOpen(true)}
           className="w-full px-4 py-3 flex items-center gap-3"

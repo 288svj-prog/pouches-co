@@ -495,14 +495,14 @@ function EmptyState({
               else if (f.flavors[0]) next.flavors = next.flavors.filter((x) => x !== f.flavors[0]);
               setSearchParams(setFilters(searchParams, next));
             }}
-            className="inline-flex items-center gap-2 h-12 px-6 rounded-pill bg-accent text-accent-on text-mono-badge font-bold hover:brightness-105 transition"
+            className="inline-flex items-center gap-2 h-12 px-6 bg-accent text-accent-on text-xs font-bold uppercase tracking-wider hover:brightness-105 transition"
           >
             REMOVE '{removable}' <X size={14} />
           </button>
         )}
         <button
           onClick={() => setSearchParams(new URLSearchParams())}
-          className="inline-flex items-center gap-2 h-12 px-6 rounded-pill border border-white text-white text-mono-badge font-bold hover:bg-white/5 transition"
+          className="inline-flex items-center gap-2 h-12 px-6 border border-white text-white text-xs font-bold uppercase tracking-wider hover:bg-white/5 transition"
         >
           CLEAR ALL FILTERS
         </button>

@@ -143,7 +143,7 @@ export function ProductCard({ product, byo }: { product: Product; byo?: boolean 
             </div>
             <button
               onClick={handleAdd}
-              className={`shrink-0 inline-flex items-center justify-center gap-1 h-9 text-mono-badge font-bold tracking-wider transition-all ease-pouch-out ${
+              className={`shrink-0 inline-flex items-center justify-center gap-1 h-9 text-[11px] font-bold uppercase tracking-wider transition-all ease-pouch-out ${
                 hovered
                   ? 'w-32 bg-accent text-accent-on'
                   : 'w-16 bg-accent text-accent-on hover:brightness-105'

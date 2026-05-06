@@ -247,7 +247,7 @@ export default function Account() {
                         </div>
                         <button
                           onClick={() => add(p)}
-                          className="px-3 h-9 border border-accent text-accent text-mono-badge font-bold tracking-wider hover:bg-accent/10 transition no-tap-highlight"
+                          className="px-3 h-9 border border-accent text-accent text-[11px] font-bold uppercase tracking-wider hover:bg-accent/10 transition no-tap-highlight"
                         >
                           REORDER
                         </button>

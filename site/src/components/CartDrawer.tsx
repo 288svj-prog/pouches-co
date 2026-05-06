@@ -389,7 +389,7 @@ function EmptyState({ onClose }: { onClose: () => void }) {
                 </Link>
                 <button
                   onClick={() => add(p)}
-                  className="shrink-0 inline-flex items-center justify-center gap-1 h-10 px-4 bg-accent text-accent-on text-mono-badge font-bold tracking-wider hover:brightness-105 active:scale-95 transition no-tap-highlight"
+                  className="shrink-0 inline-flex items-center justify-center gap-1 h-10 px-4 bg-accent text-accent-on text-[11px] font-bold uppercase tracking-wider hover:brightness-105 active:scale-95 transition no-tap-highlight"
                   aria-label={`Add ${p.flavor} to bag`}
                 >
                   <Plus size={12} strokeWidth={3} />

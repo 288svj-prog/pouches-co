@@ -96,7 +96,7 @@ export default function Checkout() {
               ].map(([label, cls]) => (
                 <button
                   key={label}
-                  className={`h-12 rounded-pill flex items-center justify-center text-mono-badge font-bold tracking-wider ${cls}`}
+                  className={`h-12 flex items-center justify-center text-xs font-bold uppercase tracking-wider ${cls}`}
                 >
                   {label}
                 </button>

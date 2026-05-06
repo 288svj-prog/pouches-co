@@ -187,7 +187,7 @@ function AboutBrand({ brand, onClose }: { brand: NonNullable<ReturnType<typeof b
         <div className="border-t border-edge-muted p-4">
           <button
             onClick={onClose}
-            className="w-full h-12 rounded-pill border border-accent text-accent text-mono-badge font-bold tracking-wider hover:bg-accent/10 transition"
+            className="w-full h-12 border border-accent text-accent text-xs font-bold uppercase tracking-wider hover:bg-accent/10 transition"
           >
             VIEW ALL {brand.productCount} {brand.name} PRODUCTS →
           </button>
