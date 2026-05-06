@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, Check, X, ChevronUp, Package } from 'lucide-react';
+import { Plus, Minus, Check, X, ChevronUp, Package, Search } from 'lucide-react';
 import { celebrate } from '../lib/anim';
 import { products } from '../data/products';
 import { Tin } from '../components/Tin';
@@ -29,6 +29,7 @@ export default function BYO() {
     toRemove.forEach((i) => remove(i.productSlug));
   };
   const [strengthFilter, setStrengthFilter] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const [mobileBoxOpen, setMobileBoxOpen] = useState(false);
 
   // Refs for celebration animation when box hits 6/6
@@ -53,9 +54,22 @@ export default function BYO() {
   const slotCount = Math.max(BYO_CONFIG.threshold, byoCount);
 
   const filtered = useMemo(() => {
-    if (!strengthFilter) return products;
-    return products.filter((p) => p.strengthTier === strengthFilter);
-  }, [strengthFilter]);
+    let list = products;
+    if (strengthFilter) list = list.filter((p) => p.strengthTier === strengthFilter);
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter((p) => {
+        const brand = brandBySlug(p.brandSlug);
+        return (
+          p.flavor.toLowerCase().includes(q) ||
+          p.name.toLowerCase().includes(q) ||
+          (brand?.name.toLowerCase().includes(q) ?? false)
+        );
+      });
+    }
+    return list;
+  }, [strengthFilter, searchQuery]);
+  const hasFilters = !!strengthFilter || !!searchQuery.trim();
 
   // Celebrate when the box transitions from <6 to ≥6
   useEffect(() => {
@@ -88,6 +102,32 @@ export default function BYO() {
         <div className="grid lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
           {/* LEFT - product picker grid */}
           <div>
+            {/* Search input */}
+            <div className="mb-3 relative">
+              <Search
+                size={16}
+                strokeWidth={2}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none"
+              />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search brand, flavor, or name…"
+                className="w-full h-11 pl-10 pr-10 bg-bg-secondary border border-edge-muted text-white placeholder-ink-muted text-sm focus:outline-none focus:border-accent transition"
+                aria-label="Search pouches"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center text-ink-secondary hover:text-white transition no-tap-highlight"
+                  aria-label="Clear search"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
             {/* Toolbar — mobile: stacked (label+sort on row 1, segments on row 2);
                 desktop: single row with segments inline. */}
             <div className="mb-5 border-y border-edge-muted">
@@ -134,6 +174,25 @@ export default function BYO() {
               </div>
             </div>
 
+            {filtered.length === 0 ? (
+              <div className="border border-dashed border-edge bg-bg-secondary/50 p-10 text-center">
+                <div className="text-mono-eyebrow text-ink-secondary mb-2">NO MATCHES</div>
+                <div className="text-white text-base">
+                  No pouches match {searchQuery ? <>“<span className="text-accent">{searchQuery}</span>”</> : 'these filters'}.
+                </div>
+                {hasFilters && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setStrengthFilter(null);
+                    }}
+                    className="mt-4 inline-flex items-center gap-1.5 text-accent text-mono-badge hover:opacity-80 transition no-tap-highlight"
+                  >
+                    <X size={11} /> CLEAR FILTERS
+                  </button>
+                )}
+              </div>
+            ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {filtered.map((p) => {
                 const brand = brandBySlug(p.brandSlug);
@@ -207,6 +266,7 @@ export default function BYO() {
                 );
               })}
             </div>
+            )}
           </div>
 
           {/* RIGHT - sticky summary (desktop only — mobile uses sticky bottom bar) */}
@@ -325,37 +385,42 @@ export default function BYO() {
         </div>
       </div>
 
-      {/* Mobile spacer so the sticky bottom bar doesn't cover the last row of the grid */}
-      <div className="lg:hidden h-24" />
+      {/* Mobile spacer — only needed when the sticky progress bar is visible
+          (the bar appears once the user adds their first pouch). Without an item
+          in the box, the bar is hidden so it doesn't intercept taps near the
+          bottom of the viewport. */}
+      <div className={`lg:hidden ${byoCount > 0 ? 'h-24' : 'h-4'}`} />
 
-      {/* MOBILE STICKY PROGRESS BAR */}
-      <div ref={mobileBarRef} className="lg:hidden fixed left-0 right-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
-        <button
-          onClick={() => setMobileBoxOpen(true)}
-          className="w-full px-4 py-3 flex items-center gap-3"
-          aria-label={`View your box, ${byoCount} of 6 pouches`}
-        >
-          {/* Progress dots */}
-          <div className="flex gap-1 shrink-0">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <span
-                key={i}
-                className={`block w-2 h-6 ${i < byoCount ? 'bg-accent' : 'bg-edge'}`}
-              />
-            ))}
-          </div>
-          <div className="flex-1 min-w-0 text-left">
-            <div className="text-mono-badge text-accent leading-none">
-              {byoCount >= 6 ? '15% UNLOCKED' : `${6 - byoCount} TO GO`}
+      {/* MOBILE STICKY PROGRESS BAR — hidden when box is empty */}
+      {byoCount > 0 && (
+        <div ref={mobileBarRef} className="lg:hidden fixed left-0 right-0 z-30 bg-bg-primary border-t border-accent/50 shadow-[0_-8px_32px_rgba(0,0,0,0.6)]" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
+          <button
+            onClick={() => setMobileBoxOpen(true)}
+            className="w-full px-4 py-3 flex items-center gap-3"
+            aria-label={`View your box, ${byoCount} of 6 pouches`}
+          >
+            {/* Progress dots */}
+            <div className="flex gap-1 shrink-0">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`block w-2 h-6 ${i < byoCount ? 'bg-accent' : 'bg-edge'}`}
+                />
+              ))}
             </div>
-            <div className="text-white text-sm font-bold mt-1 truncate">
-              {byoCount} of 6 · ${liveTotal.toFixed(2)}
-              {discount > 0 && <span className="text-accent ml-1">(−${discount.toFixed(2)})</span>}
+            <div className="flex-1 min-w-0 text-left">
+              <div className="text-mono-badge text-accent leading-none">
+                {byoCount >= 6 ? '15% UNLOCKED' : `${6 - byoCount} TO GO`}
+              </div>
+              <div className="text-white text-sm font-bold mt-1 truncate">
+                {byoCount} of 6 · ${liveTotal.toFixed(2)}
+                {discount > 0 && <span className="text-accent ml-1">(−${discount.toFixed(2)})</span>}
+              </div>
             </div>
-          </div>
-          <ChevronUp size={18} className="text-white shrink-0" />
-        </button>
-      </div>
+            <ChevronUp size={18} className="text-white shrink-0" />
+          </button>
+        </div>
+      )}
 
       {/* MOBILE BOX BOTTOM-SHEET */}
       {mobileBoxOpen && (
