@@ -1,0 +1,228 @@
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Check, X } from 'lucide-react';
+import { products } from '../data/products';
+import { Tin } from '../components/Tin';
+import { productImage } from '../data/images';
+import { brandBySlug } from '../data/brands';
+import { Eyebrow } from '../components/Eyebrow';
+import { useCart, BYO_CONFIG } from '../store/cart';
+
+export default function BYO() {
+  const items = useCart((s) => s.items);
+  const add = useCart((s) => s.add);
+  const remove = useCart((s) => s.remove);
+  const navigate = useNavigate();
+  const [strengthFilter, setStrengthFilter] = useState<string | null>(null);
+  const byoItems = useMemo(() => items.filter((i) => i.byo), [items]);
+  const byoCount = byoItems.reduce((s, i) => s + i.qty, 0);
+  const byoTotal = byoItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const discount = byoCount >= BYO_CONFIG.threshold ? +(byoTotal * BYO_CONFIG.rate).toFixed(2) : 0;
+  const liveTotal = +(byoTotal - discount).toFixed(2);
+
+  const filtered = useMemo(() => {
+    if (!strengthFilter) return products;
+    return products.filter((p) => p.strengthTier === strengthFilter);
+  }, [strengthFilter]);
+
+  const headline = byoCount === 0 ? 'Build your box.' : byoCount < 6 ? 'Half built.' : 'Box ready.';
+  const sub =
+    byoCount === 0
+      ? 'Pick 6 pouches across any brand. The cart applies 15% automatically when you hit six.'
+      : byoCount < 6
+        ? `Pick ${6 - byoCount} more pouches to lock in your 15% box discount. Mix and match across all 12 brands.`
+        : 'Your box is complete and 15% off. Add more or check out.';
+
+  return (
+    <div className="bg-bg-primary">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-10 md:py-16">
+        <div className="text-center mb-10">
+          <Eyebrow className="mb-3">BYO BOX · {byoCount} OF 6 SELECTED</Eyebrow>
+          <h1 className="font-display italic text-white text-5xl md:text-6xl lg:text-7xl">{headline}</h1>
+          <p className="mt-4 text-white/85 max-w-2xl mx-auto">{sub}</p>
+        </div>
+
+        <div className="grid lg:grid-cols-[1fr_360px] gap-6 lg:gap-10">
+          {/* LEFT - product picker grid */}
+          <div>
+            <div className="flex flex-wrap items-center gap-2 mb-6">
+              <span className="text-mono-eyebrow text-accent">FILTER:</span>
+              {['light', 'regular', 'strong', 'x-strong'].map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStrengthFilter(strengthFilter === s ? null : s)}
+                  className={`px-4 py-2 rounded-pill border text-mono-badge transition ${
+                    strengthFilter === s ? 'border-accent text-accent' : 'border-edge text-white hover:border-white/40'
+                  }`}
+                >
+                  STRENGTH: {s.toUpperCase()} {strengthFilter === s && <X size={11} className="inline ml-1" />}
+                </button>
+              ))}
+              <span className="ml-auto text-mono-badge text-ink-secondary">SORT: BESTSELLERS</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {filtered.map((p) => {
+                const brand = brandBySlug(p.brandSlug);
+                const inBox = items.find((i) => i.productSlug === p.slug && i.byo);
+                return (
+                  <div
+                    key={p.slug}
+                    className={`relative rounded-card border bg-bg-secondary overflow-hidden transition ${
+                      inBox ? 'border-accent shadow-glow-accent-strong' : 'border-edge'
+                    }`}
+                  >
+                    {inBox && (
+                      <span className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-accent text-accent-on flex items-center justify-center">
+                        <Check size={16} strokeWidth={3} />
+                      </span>
+                    )}
+                    <div className="relative aspect-square">
+                      <Tin
+                        brand={brand?.name || ''}
+                        flavor={p.flavor.toUpperCase()}
+                        swatch={p.swatch}
+                        textColor={p.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                        surface={brand?.surface || 'concrete'}
+                        size={300}
+                        image={productImage(p.slug, p.brandSlug)}
+                      />
+                      <div
+                        className="absolute left-0 right-0 bottom-0 h-1.5"
+                        style={{ background: p.swatch }}
+                        aria-hidden="true"
+                      />
+                    </div>
+                    <div className="p-4">
+                      <div className="text-mono-badge text-ink-secondary">{brand?.name}</div>
+                      <div className="text-white font-bold text-sm mt-1">{p.flavor}</div>
+                      <div className="text-mono-badge text-ink-secondary mt-1">
+                        ${p.price.toFixed(2)} · {p.strengthMg}MG {p.strengthTier.toUpperCase()}
+                      </div>
+                      <button
+                        onClick={() => (inBox ? remove(p.slug) : add(p, 1, { byo: true }))}
+                        className={`mt-3 w-full h-10 rounded-pill text-mono-badge font-bold tracking-wider transition flex items-center justify-center gap-1.5 ${
+                          inBox
+                            ? 'bg-accent text-accent-on'
+                            : 'border border-white text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {inBox ? (
+                          <>
+                            <Check size={12} strokeWidth={3} />
+                            <span>IN BOX ({inBox.qty})</span>
+                          </>
+                        ) : (
+                          <>
+                            <Plus size={12} strokeWidth={3} />
+                            <span>ADD TO BOX</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT - sticky summary */}
+          <aside className="lg:sticky lg:top-32 self-start bg-bg-secondary border border-edge rounded-card overflow-hidden">
+            <div className="p-5 border-b border-edge-muted">
+              <div className="text-mono-eyebrow text-accent">YOUR BOX</div>
+              <div className="text-white font-display italic text-3xl mt-1 leading-none">
+                {byoCount} of 6
+              </div>
+              <div className="text-ink-secondary text-xs mt-1">
+                {byoCount >= 6 ? '✓ 15% box discount unlocked' : `${6 - byoCount} more to unlock 15% off`}
+              </div>
+            </div>
+
+            <div className="p-5 border-b border-edge-muted">
+              <div className="text-mono-eyebrow text-accent mb-3">BOX VISUAL</div>
+              <div className="grid grid-cols-3 gap-2">
+                {Array.from({ length: 6 }, (_, i) => {
+                  const it = byoItems[i];
+                  if (it) {
+                    const brand = brandBySlug(it.brandSlug);
+                    return (
+                      <div key={i} className="relative aspect-square rounded overflow-hidden border border-accent/40">
+                        <Tin
+                          brand={brand?.name || ''}
+                          swatch={it.swatch}
+                          textColor={it.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                          surface={brand?.surface || 'concrete'}
+                          size={100}
+                          image={productImage(it.productSlug, it.brandSlug)}
+                        />
+                        <button
+                          onClick={() => remove(it.productSlug)}
+                          className="absolute top-1 right-1 w-5 h-5 rounded-full bg-bg-primary border border-edge flex items-center justify-center"
+                          aria-label="Remove"
+                        >
+                          <X size={11} className="text-white" />
+                        </button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div
+                      key={i}
+                      className="aspect-square rounded border border-dashed border-edge flex flex-col items-center justify-center text-edge"
+                    >
+                      <Plus size={20} />
+                      <span className="text-mono-badge text-ink-muted mt-1">ADD</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="p-5 border-b border-edge-muted">
+              <div className="text-mono-eyebrow text-accent mb-3">PRICE BREAKDOWN</div>
+              <div className="flex items-center justify-between text-sm py-1">
+                <span className="text-ink-secondary">Subtotal ({byoCount} items)</span>
+                <span className="text-white">${byoTotal.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm py-1">
+                <span className="text-ink-secondary">Box discount (15%)</span>
+                <span className={discount > 0 ? 'text-accent' : 'text-ink-secondary'}>
+                  {discount > 0 ? `−$${discount.toFixed(2)}` : 'Unlocks at 6'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-edge-muted">
+                <span className="text-mono-eyebrow text-white">TOTAL (CURRENT)</span>
+                <span className="text-white font-bold text-lg">${liveTotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="p-5">
+              <button
+                disabled={byoCount < 6}
+                onClick={() => navigate('/checkout')}
+                className="w-full h-12 rounded-pill bg-accent text-accent-on font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed hover:brightness-105 transition"
+              >
+                {byoCount >= 6 ? 'PROCEED TO CHECKOUT →' : 'PROCEED TO CHECKOUT'}
+              </button>
+              {byoCount < 6 && (
+                <div className="text-mono-badge text-ink-secondary text-center mt-2">
+                  Add {6 - byoCount} more to unlock discount
+                </div>
+              )}
+              <button className="mt-3 w-full h-12 rounded-pill border border-edge text-white font-bold uppercase tracking-wider hover:bg-white/5 transition">
+                SAVE BOX FOR LATER →
+              </button>
+            </div>
+
+            <div className="p-5 bg-bg-primary border-t border-edge-muted">
+              <div className="text-mono-eyebrow text-accent mb-2">WHY BUILD A BOX?</div>
+              <p className="text-ink-secondary text-xs leading-relaxed">
+                Mix any 6 pouches across 12 brands. Save 15%. Free shipping over $49. Discover your next favorite without committing to a full roll.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </div>
+  );
+}

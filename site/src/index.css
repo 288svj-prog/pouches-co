@@ -1,0 +1,121 @@
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: #0A0A0A;
+    color: #FFFFFF;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #CCFF00;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: #CCFF00;
+    color: #0A0A0A;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Anton', 'Bebas Neue', Impact, sans-serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  .text-mono-eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .text-mono-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      #151515 0%,
+      rgba(255, 255, 255, 0.04) 50%,
+      #151515 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .gradient-fade-bottom {
+    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  }
+
+  /* Lookbook concrete texture for product backdrops */
+  .surface-concrete {
+    background:
+      radial-gradient(circle at 30% 20%, rgba(80, 80, 80, 0.4), transparent 50%),
+      radial-gradient(circle at 70% 60%, rgba(50, 50, 50, 0.4), transparent 50%),
+      linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  }
+  .surface-denim {
+    background:
+      radial-gradient(circle at 30% 20%, rgba(40, 60, 90, 0.5), transparent 60%),
+      linear-gradient(135deg, #1a2640 0%, #0e1426 100%);
+  }
+  .surface-leather {
+    background:
+      radial-gradient(circle at 40% 30%, rgba(70, 50, 40, 0.5), transparent 60%),
+      linear-gradient(135deg, #1f1610 0%, #0e0a07 100%);
+  }
+  .surface-metal {
+    background:
+      linear-gradient(135deg, #303030 0%, #1a1a1a 50%, #2a2a2a 100%);
+  }
+
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
