@@ -19,6 +19,14 @@ export default function BYO() {
   const add = useCart((s) => s.add);
   const remove = useCart((s) => s.remove);
   const navigate = useNavigate();
+
+  // Empty out every BYO item in one tap (with confirm) — leaves any non-BYO items intact.
+  const clearBox = () => {
+    const toRemove = items.filter((i) => i.byo);
+    if (toRemove.length === 0) return;
+    if (!window.confirm(`Clear all ${toRemove.length} item${toRemove.length === 1 ? '' : 's'} from your box?`)) return;
+    toRemove.forEach((i) => remove(i.productSlug));
+  };
   const [strengthFilter, setStrengthFilter] = useState<string | null>(null);
   const [mobileBoxOpen, setMobileBoxOpen] = useState(false);
 
@@ -174,11 +182,24 @@ export default function BYO() {
           {/* RIGHT - sticky summary (desktop only — mobile uses sticky bottom bar) */}
           <aside ref={desktopBoxRef} className="hidden lg:block lg:sticky lg:top-32 self-start bg-bg-secondary border border-edge overflow-hidden">
             <div className="p-5 border-b border-edge-muted">
-              <div className="text-mono-eyebrow text-accent">YOUR BOX</div>
-              <div className="text-white font-display italic text-3xl mt-1 leading-none">
-                {byoCount} of 6
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-mono-eyebrow text-accent">YOUR BOX</div>
+                  <div className="text-white font-display italic text-3xl mt-1 leading-none">
+                    {byoCount} of 6
+                  </div>
+                </div>
+                {byoCount > 0 && (
+                  <button
+                    onClick={clearBox}
+                    className="shrink-0 inline-flex items-center gap-1 text-mono-badge text-ink-secondary hover:text-danger transition no-tap-highlight"
+                    aria-label="Clear box"
+                  >
+                    <X size={11} /> CLEAR
+                  </button>
+                )}
               </div>
-              <div className="text-ink-secondary text-xs mt-1">
+              <div className="text-ink-secondary text-xs mt-2">
                 {byoCount >= 6 ? '✓ 15% box discount unlocked' : `${6 - byoCount} more to unlock 15% off`}
               </div>
             </div>
@@ -310,13 +331,24 @@ export default function BYO() {
               <span className="w-10 h-1 bg-edge rounded-full" />
             </div>
             <div className="px-4 pb-3 flex items-center justify-between border-b border-edge-muted">
-              <div className="flex items-center gap-2">
-                <Package size={16} className="text-accent" strokeWidth={2} />
-                <span className="text-mono-eyebrow text-white">YOUR BOX · {byoCount} OF 6</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <Package size={16} className="text-accent shrink-0" strokeWidth={2} />
+                <span className="text-mono-eyebrow text-white truncate">YOUR BOX · {byoCount} OF 6</span>
               </div>
-              <button onClick={() => setMobileBoxOpen(false)} className="p-1 -mr-1" aria-label="Close">
-                <X size={18} className="text-white" />
-              </button>
+              <div className="flex items-center gap-3 shrink-0">
+                {byoCount > 0 && (
+                  <button
+                    onClick={clearBox}
+                    className="inline-flex items-center gap-1 text-mono-badge text-ink-secondary hover:text-danger transition no-tap-highlight"
+                    aria-label="Clear box"
+                  >
+                    <X size={11} /> CLEAR
+                  </button>
+                )}
+                <button onClick={() => setMobileBoxOpen(false)} className="w-8 h-8 -mr-2 flex items-center justify-center" aria-label="Close">
+                  <X size={18} className="text-white" />
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto px-4 py-4">
