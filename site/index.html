@@ -2,11 +2,89 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0A0A0A" />
-    <meta name="description" content="Every Swedish nicotine pouch brand. One checkout. Shipped from Uppsala to 47 countries." />
-    <title>POUCHES — Every Swedish brand. One checkout.</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="mask-icon" href="/icon.svg" color="#CCFF00" />
+
+    <!-- PWA / Manifest -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content="POUCHES" />
+    <meta name="application-name" content="POUCHES" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Primary SEO -->
+    <title>POUCHES — Every Swedish nicotine pouch brand. One checkout.</title>
+    <meta
+      name="description"
+      content="Every Swedish nicotine pouch brand we stock — ZYN, VELO, ACE, ICEBERG, KILLA, FUMI, and more. Shipped from Uppsala to 47 countries. Build a Box, save 15%."
+    />
+    <meta
+      name="keywords"
+      content="nicotine pouches, swedish snus, zyn, velo, ace, iceberg, killa, fumi, build your own box, tobacco-free pouches, uppsala"
+    />
+    <meta name="author" content="Pouches.co" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="https://pouches.co/" />
+
+    <!-- Open Graph (Facebook, LinkedIn, iMessage, Slack) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="POUCHES" />
+    <meta property="og:url" content="https://pouches.co/" />
+    <meta property="og:title" content="POUCHES — Every Swedish nicotine pouch brand. One checkout." />
+    <meta
+      property="og:description"
+      content="Twelve Swedish brands. 41+ pouches. Shipped from Uppsala to 47 countries. Build a Box, save 15%."
+    />
+    <meta property="og:image" content="https://pouches.co/img/hero/hero-wordmark.jpg" />
+    <meta property="og:image:width" content="1920" />
+    <meta property="og:image:height" content="1080" />
+    <meta property="og:image:alt" content="Matte black POUCHES tin with acid-green wordmark on cracked concrete" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@pouches" />
+    <meta name="twitter:creator" content="@pouches" />
+    <meta name="twitter:title" content="POUCHES — Every Swedish brand. One checkout." />
+    <meta
+      name="twitter:description"
+      content="Twelve Swedish nicotine pouch brands, shipped from Uppsala to 47 countries."
+    />
+    <meta name="twitter:image" content="https://pouches.co/img/hero/hero-wordmark.jpg" />
+    <meta name="twitter:image:alt" content="Matte black POUCHES tin with acid-green wordmark on cracked concrete" />
+
+    <!-- Age gate / regulatory -->
+    <meta name="rating" content="adult" />
+    <meta name="age-rating" content="21+" />
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Organization JSON-LD for rich results -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "POUCHES",
+        "alternateName": "Pouches.co",
+        "url": "https://pouches.co",
+        "logo": "https://pouches.co/wordmark.svg",
+        "description": "Every Swedish nicotine pouch brand. One checkout. Shipped from Uppsala to 47 countries.",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Uppsala",
+          "addressCountry": "SE"
+        },
+        "sameAs": []
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
