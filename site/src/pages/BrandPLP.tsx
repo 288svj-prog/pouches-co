@@ -15,7 +15,6 @@ export default function BrandPLP() {
   const [aboutOpen, setAboutOpen] = useState(false);
   if (!brand) return <Navigate to="/brands" replace />;
   const list = productsByBrand(brand.slug);
-  const flagship = list[0];
   const others = brands.filter((b) => b.slug !== brand.slug).slice(0, 4);
 
   return (

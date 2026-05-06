@@ -1,12 +1,26 @@
 import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Plus, Minus, Lock, Truck, ShoppingBag } from 'lucide-react';
-import { useCart, selectItemCount, selectByoCount, selectSubtotal, selectByoDiscount, selectTotal, selectFreeShipProgress } from '../store/cart';
+import { X, Plus, Minus, Lock, Truck, ArrowRight, Package, Sparkles } from 'lucide-react';
+import {
+  useCart,
+  selectItemCount,
+  selectByoCount,
+  selectSubtotal,
+  selectByoDiscount,
+  selectTotal,
+  selectFreeShipProgress,
+} from '../store/cart';
 import { Tin } from './Tin';
 import { productImage } from '../data/images';
 import { brandBySlug } from '../data/brands';
 import { bestsellers, productBySlug, totalProductCount } from '../data/products';
 
+/**
+ * Cart drawer — mobile-first.
+ * - Mobile: full-screen overlay with drag handle, sticky header + sticky CTA footer.
+ *   Content area is the only scrollable region. Touch-targets ≥ 44px.
+ * - Desktop (sm+): 480px right-side panel with the same internal layout.
+ */
 export function CartDrawer() {
   const open = useCart((s) => s.drawerOpen);
   const close = useCart((s) => s.closeDrawer);
@@ -37,289 +51,385 @@ export function CartDrawer() {
 
   return (
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/50 animate-fade-in" onClick={close} />
+      {/* Dim overlay */}
+      <div className="absolute inset-0 bg-black/60 animate-fade-in" onClick={close} />
+
       <aside
-        className={`absolute right-0 top-0 bottom-0 w-full sm:max-w-[480px] bg-bg-primary border-l border-edge-muted flex flex-col animate-slide-right`}
+        role="dialog"
+        aria-label="Shopping bag"
+        className="absolute inset-0 sm:inset-auto sm:right-0 sm:top-0 sm:bottom-0 sm:w-[440px] md:w-[480px] bg-bg-primary sm:border-l sm:border-edge-muted flex flex-col animate-slide-right shadow-[0_0_60px_rgba(0,0,0,0.6)]"
       >
-        {/* header */}
-        <div className="h-16 px-5 flex items-center justify-between border-b border-edge-muted shrink-0">
+        {/* HEADER — sticky at top of drawer */}
+        <header className="shrink-0 px-4 sm:px-5 h-14 sm:h-16 flex items-center justify-between border-b border-edge-muted">
           <div className="flex items-center gap-2.5">
-            <span className="text-white font-bold uppercase tracking-wider text-sm">YOUR BAG</span>
+            <span className="text-white font-bold uppercase tracking-wider text-sm">Your Bag</span>
             <span
-              className={`inline-flex items-center justify-center min-w-7 h-6 px-2 rounded-pill text-mono-badge ${
-                itemCount > 0 ? 'bg-accent text-accent-on' : 'bg-edge text-ink-secondary'
+              className={`inline-flex items-center justify-center min-w-7 h-6 px-2 text-mono-badge ${
+                itemCount > 0 ? 'bg-accent text-accent-on' : 'border border-edge text-ink-secondary'
               }`}
             >
-              ({itemCount})
+              {itemCount}
             </span>
           </div>
-          <button onClick={close} aria-label="Close cart" className="p-1 text-white">
+          <button
+            onClick={close}
+            aria-label="Close cart"
+            className="w-10 h-10 -mr-2 flex items-center justify-center text-white hover:text-accent transition"
+          >
             <X size={22} strokeWidth={2} />
           </button>
-        </div>
+        </header>
 
-        {empty ? <EmptyState onClose={close} /> : (
+        {empty ? (
+          <EmptyState onClose={close} />
+        ) : (
           <>
-            {/* free ship strip */}
-            <div className="px-5 py-3 bg-bg-secondary shrink-0">
-              <div className="text-center text-mono-badge text-white">
+            {/* FREE SHIPPING PROGRESS */}
+            <div className="shrink-0 px-4 sm:px-5 py-3 bg-bg-secondary border-b border-edge-muted">
+              <div className="flex items-center justify-between text-mono-badge mb-2">
                 {ship.remaining > 0 ? (
-                  <>ADD ${ship.remaining.toFixed(2)} MORE FOR FREE WORLDWIDE SHIPPING</>
+                  <>
+                    <span className="text-white inline-flex items-center gap-1.5">
+                      <Truck size={11} className="text-accent" />
+                      ADD <span className="text-accent">${ship.remaining.toFixed(2)}</span> FOR FREE SHIPPING
+                    </span>
+                    <span className="text-ink-secondary">{Math.round(ship.pct)}%</span>
+                  </>
                 ) : (
-                  <span className="text-accent">🎉 FREE WORLDWIDE SHIPPING UNLOCKED</span>
+                  <span className="text-accent inline-flex items-center gap-1.5 font-bold">
+                    <Sparkles size={12} /> FREE WORLDWIDE SHIPPING UNLOCKED
+                  </span>
                 )}
               </div>
-              <div className="mt-2 h-1 rounded-pill bg-edge overflow-hidden">
+              <div className="h-1 bg-edge overflow-hidden relative">
                 <div
-                  className="h-full bg-accent transition-all duration-slow ease-pouch-out"
+                  className="absolute inset-y-0 left-0 bg-accent transition-all duration-slow ease-pouch-out"
                   style={{ width: `${ship.pct}%` }}
                 />
               </div>
             </div>
 
-            {/* items */}
-            <div className="flex-1 overflow-y-auto">
-              {items.map((it) => {
-                const brand = brandBySlug(it.brandSlug);
-                const original = it.byo ? it.price : null;
-                const display = it.byo ? +(it.price * 0.85).toFixed(2) : it.price;
-                return (
-                  <div
-                    key={it.productSlug}
-                    className={`flex gap-3 p-4 border-b border-edge-muted ${
-                      it.justAdded ? 'border-l-2 border-l-accent' : ''
-                    }`}
-                  >
-                    <div className="w-20 h-20 rounded-card overflow-hidden flex-shrink-0 relative">
-                      <Tin
-                        brand={brand?.name || ''}
-                        swatch={it.swatch}
-                        textColor={it.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
-                        surface={brand?.surface || 'concrete'}
-                        size={160}
-                        image={productImage(it.productSlug, it.brandSlug)}
-                      />
-                      {it.byo && (
-                        <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-accent text-accent-on text-[8px] font-mono font-bold tracking-wider">
-                          BYO
-                        </span>
+            {/* SCROLLABLE BODY */}
+            <div className="flex-1 overflow-y-auto overscroll-contain">
+              {/* ITEMS LIST */}
+              <ul className="divide-y divide-edge-muted">
+                {items.map((it) => {
+                  const brand = brandBySlug(it.brandSlug);
+                  const original = it.byo ? it.price : null;
+                  const display = it.byo ? +(it.price * 0.85).toFixed(2) : it.price;
+                  return (
+                    <li
+                      key={it.productSlug}
+                      className={`relative flex gap-3 sm:gap-4 p-4 sm:px-5 transition ${
+                        it.justAdded ? 'bg-accent/[0.03]' : ''
+                      }`}
+                    >
+                      {it.justAdded && (
+                        <span aria-hidden className="absolute left-0 top-0 bottom-0 w-0.5 bg-accent" />
                       )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <div className="text-mono-badge text-ink-secondary">{brand?.name}</div>
-                          <div className="text-white font-bold text-sm leading-snug truncate">{it.name}</div>
-                          <div className="text-xs text-ink-secondary mt-0.5">{it.variant}</div>
-                        </div>
-                        <div className="text-right shrink-0">
-                          {original && (
-                            <div className="text-xs text-ink-secondary line-through">${original.toFixed(2)}</div>
-                          )}
-                          <div className={`font-bold text-sm ${it.byo ? 'text-accent' : 'text-white'}`}>
-                            ${display.toFixed(2)}
-                          </div>
-                          {it.byo && byoCount >= 6 && (
-                            <div className="text-[10px] text-accent">15% BYO disc</div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between mt-2.5">
-                        <div className="flex items-center border border-edge rounded-pill h-8">
-                          <button
-                            onClick={() => updateQty(it.productSlug, it.qty - 1)}
-                            className="w-7 h-7 flex items-center justify-center text-white"
-                            aria-label="Decrease"
-                          >
-                            <Minus size={12} strokeWidth={2} />
-                          </button>
-                          <span className="w-8 text-center text-white text-sm">{it.qty}</span>
-                          <button
-                            onClick={() => updateQty(it.productSlug, it.qty + 1)}
-                            className="w-7 h-7 flex items-center justify-center text-white"
-                            aria-label="Increase"
-                          >
-                            <Plus size={12} strokeWidth={2} />
-                          </button>
-                        </div>
-                        <button
-                          onClick={() => remove(it.productSlug)}
-                          className="text-xs text-ink-secondary hover:text-white inline-flex items-center gap-1 underline underline-offset-2"
-                        >
-                          Remove <X size={11} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
 
-              {/* BYO upsell */}
+                      {/* Thumb */}
+                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 overflow-hidden border border-edge-muted">
+                        <Tin
+                          brand={brand?.name || ''}
+                          swatch={it.swatch}
+                          textColor={it.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                          surface={brand?.surface || 'concrete'}
+                          size={160}
+                          image={productImage(it.productSlug, it.brandSlug)}
+                        />
+                        {it.byo && (
+                          <span className="absolute top-1 left-1 px-1.5 py-0.5 bg-accent text-accent-on text-[8px] font-mono font-bold tracking-wider">
+                            BYO
+                          </span>
+                        )}
+                        <div
+                          className="absolute left-0 right-0 bottom-0 h-1"
+                          style={{ background: it.swatch }}
+                        />
+                      </div>
+
+                      {/* Body */}
+                      <div className="flex-1 min-w-0 flex flex-col">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-mono-badge text-ink-secondary leading-none">{brand?.name}</div>
+                            <h3 className="text-white font-bold text-[15px] leading-tight mt-1 truncate">{it.name}</h3>
+                            <div className="text-xs text-ink-secondary mt-0.5">{it.variant}</div>
+                          </div>
+                          <div className="text-right shrink-0">
+                            {original && (
+                              <div className="text-[11px] text-ink-secondary line-through leading-none">
+                                ${(original * it.qty).toFixed(2)}
+                              </div>
+                            )}
+                            <div className={`font-bold text-base leading-tight ${it.byo ? 'text-accent' : 'text-white'}`}>
+                              ${(display * it.qty).toFixed(2)}
+                            </div>
+                            {it.qty > 1 && (
+                              <div className="text-[10px] text-ink-secondary mt-0.5">${display.toFixed(2)} each</div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Qty stepper + remove */}
+                        <div className="mt-auto pt-2.5 flex items-center justify-between">
+                          <div className="flex items-center border border-edge h-9">
+                            <button
+                              onClick={() => updateQty(it.productSlug, it.qty - 1)}
+                              className="w-9 h-9 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
+                              aria-label={`Decrease ${it.name}`}
+                            >
+                              <Minus size={13} strokeWidth={2.5} />
+                            </button>
+                            <span className="w-8 text-center text-white text-sm font-bold tabular-nums">{it.qty}</span>
+                            <button
+                              onClick={() => updateQty(it.productSlug, it.qty + 1)}
+                              className="w-9 h-9 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
+                              aria-label={`Increase ${it.name}`}
+                            >
+                              <Plus size={13} strokeWidth={2.5} />
+                            </button>
+                          </div>
+                          <button
+                            onClick={() => remove(it.productSlug)}
+                            className="text-xs text-ink-secondary hover:text-danger transition py-1.5 px-1 -mr-1"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* BYO UPSELL */}
               {byoCount > 0 && byoCount < 6 && (
-                <div className="m-4 p-4 bg-bg-secondary border border-edge rounded-card text-center">
-                  <div className="text-mono-eyebrow text-accent">
-                    ADD {6 - byoCount} MORE TO COMPLETE YOUR BOX
+                <div className="mx-4 sm:mx-5 my-5 border border-accent/40 bg-accent/[0.04] p-4 relative">
+                  <span aria-hidden className="absolute top-0 left-0 w-8 h-px bg-accent" />
+                  <span aria-hidden className="absolute top-0 left-0 h-8 w-px bg-accent" />
+                  <span aria-hidden className="absolute bottom-0 right-0 w-8 h-px bg-accent" />
+                  <span aria-hidden className="absolute bottom-0 right-0 h-8 w-px bg-accent" />
+                  <div className="flex items-start gap-3">
+                    <Package size={20} className="text-accent shrink-0 mt-0.5" strokeWidth={1.5} />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-mono-badge text-accent">
+                        ADD {6 - byoCount} MORE TO COMPLETE YOUR BOX
+                      </div>
+                      <div className="mt-1 text-white text-sm font-medium">
+                        Mix any 6 — save 15% across the box.
+                      </div>
+                    </div>
                   </div>
-                  <div className="mt-2 text-white text-sm">Mix any 6 — save 15% across the box</div>
                   <Link
                     to="/build"
                     onClick={close}
-                    className="mt-3 inline-flex items-center justify-center w-full h-11 rounded-pill border border-white text-white text-mono-badge tracking-wider hover:bg-white/5 transition"
+                    className="mt-3 inline-flex items-center justify-center w-full h-11 border border-white text-white text-mono-badge tracking-wider hover:bg-white/5 transition"
                   >
-                    ADD MORE PRODUCTS →
+                    BROWSE PRODUCTS
+                    <ArrowRight size={13} className="ml-2" />
                   </Link>
                 </div>
               )}
 
-              {/* summary */}
-              <div className="px-5 py-4 space-y-2 border-t border-edge-muted">
-                <Row label={`Subtotal (${itemCount} items)`} value={`$${subtotal.toFixed(2)}`} />
-                {byoDiscount > 0 && <Row label="BYO Discount" value={`−$${byoDiscount.toFixed(2)}`} accent />}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-ink-secondary">Shipping</span>
-                  <span className="text-ink-secondary italic text-xs">
-                    {ship.remaining > 0 ? 'Calculated at checkout' : 'FREE'}
+              {/* SUMMARY */}
+              <div className="px-4 sm:px-5 py-5 border-t border-edge-muted">
+                <Row label={`Subtotal (${itemCount} ${itemCount === 1 ? 'item' : 'items'})`} value={`$${subtotal.toFixed(2)}`} />
+                {byoDiscount > 0 && (
+                  <Row label="BYO Discount (15%)" value={`−$${byoDiscount.toFixed(2)}`} accent />
+                )}
+                <Row
+                  label="Shipping"
+                  value={ship.remaining > 0 ? 'At checkout' : 'FREE'}
+                  accent={ship.remaining === 0}
+                  italic={ship.remaining > 0}
+                />
+                <div className="border-t border-edge-muted mt-3 pt-3 flex items-end justify-between">
+                  <div>
+                    <div className="text-mono-badge text-ink-secondary">TOTAL</div>
+                    <div className="text-[10px] text-ink-muted mt-0.5">Tax calculated at checkout</div>
+                  </div>
+                  <span className="text-white font-bold text-2xl tabular-nums">
+                    ${total.toFixed(2)}
+                    <span className="text-xs text-ink-secondary font-normal ml-1">USD</span>
                   </span>
-                </div>
-                <div className="border-t border-edge-muted pt-3 flex items-end justify-between">
-                  <span className="text-mono-badge text-ink-secondary">TOTAL</span>
-                  <span className="text-white font-bold text-2xl">${total.toFixed(2)} <span className="text-xs text-ink-secondary font-normal">USD</span></span>
                 </div>
               </div>
             </div>
 
-            {/* sticky footer */}
-            <div className="border-t border-edge-muted p-5 shrink-0">
-              <div className="text-mono-badge text-white text-center mb-3 flex items-center justify-center gap-2">
-                <Truck size={12} strokeWidth={2} className="text-accent" />
-                <span>SHIPS FROM UPPSALA · 47 COUNTRIES</span>
-              </div>
+            {/* STICKY FOOTER CTA */}
+            <footer className="shrink-0 border-t border-edge-muted bg-bg-primary px-4 sm:px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <button
                 onClick={() => {
                   close();
                   navigate('/checkout');
                 }}
-                className="w-full h-14 rounded-pill bg-accent text-accent-on font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.99] transition"
+                className="w-full h-14 bg-accent text-accent-on font-bold uppercase tracking-wider flex items-center justify-center gap-2.5 hover:brightness-105 active:scale-[0.99] transition no-tap-highlight"
               >
-                <Lock size={14} strokeWidth={2} />
-                <span>PROCEED TO CHECKOUT →</span>
+                <Lock size={15} strokeWidth={2.5} />
+                <span>CHECKOUT · ${total.toFixed(2)}</span>
               </button>
               <button
                 onClick={close}
-                className="w-full mt-3 text-white text-sm underline underline-offset-4 hover:text-accent transition"
+                className="w-full mt-2.5 h-10 text-ink-secondary text-sm hover:text-white transition"
               >
                 Continue shopping
               </button>
-            </div>
+              <div className="mt-3 flex items-center justify-center gap-3 text-mono-badge text-ink-muted">
+                <span className="inline-flex items-center gap-1">
+                  <Lock size={9} /> SSL
+                </span>
+                <span className="text-edge">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Truck size={10} /> SHIPS FROM UPPSALA
+                </span>
+                <span className="text-edge">·</span>
+                <span>47 COUNTRIES</span>
+              </div>
+            </footer>
           </>
         )}
       </aside>
     </div>
   );
 
-  function Row({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  function Row({
+    label,
+    value,
+    accent,
+    italic,
+  }: {
+    label: string;
+    value: string;
+    accent?: boolean;
+    italic?: boolean;
+  }) {
     return (
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-sm py-1">
         <span className="text-ink-secondary">{label}</span>
-        <span className={accent ? 'text-accent font-medium' : 'text-white font-medium'}>{value}</span>
+        <span
+          className={`tabular-nums ${
+            accent ? 'text-accent font-bold' : italic ? 'text-ink-secondary italic text-xs' : 'text-white font-medium'
+          }`}
+        >
+          {value}
+        </span>
       </div>
     );
   }
 }
 
+/* ---------- Empty state ---------- */
+
 function EmptyState({ onClose }: { onClose: () => void }) {
   const quickStartSlugs = ['zyn-cool-mint-6mg', 'velo-polar-mint-4mg', 'iceberg-spearmint-8mg'];
-  const quickStart = quickStartSlugs.map((s) => productBySlug(s)).filter((x): x is NonNullable<typeof x> => !!x);
+  const quickStart = quickStartSlugs
+    .map((s) => productBySlug(s))
+    .filter((x): x is NonNullable<typeof x> => !!x);
   const fallback = bestsellers().slice(0, 3);
   const list = quickStart.length === 3 ? quickStart : fallback;
   const add = useCart((s) => s.add);
 
   return (
-    <div className="flex-1 overflow-y-auto px-5 py-8">
-      <div className="flex justify-center mb-4">
-        <div className="relative">
-          <ShoppingBag size={72} strokeWidth={1.25} className="text-edge" />
-          <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-bg-primary border border-accent text-accent text-[10px] font-mono flex items-center justify-center">
+    <div className="flex-1 overflow-y-auto overscroll-contain">
+      {/* HERO MESSAGE */}
+      <div className="px-4 sm:px-5 pt-10 pb-8 text-center border-b border-edge-muted">
+        <div className="relative inline-flex mb-5">
+          <div className="w-16 h-16 border border-edge-muted flex items-center justify-center">
+            <Package size={28} strokeWidth={1.5} className="text-ink-secondary" />
+          </div>
+          <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-bg-primary border border-accent text-accent text-[10px] font-mono font-bold flex items-center justify-center">
             0
           </span>
         </div>
-      </div>
-      <h3 className="font-display text-3xl text-white text-center leading-tight">
-        Your bag<br />is empty.
-      </h3>
-      <p className="mt-3 text-center text-ink-secondary text-sm leading-relaxed">
-        Nothing saved yet.<br />Start with our most-loved Swedish brands.
-      </p>
-      <div className="my-6 border-t border-edge-muted" />
-      <div className="text-mono-eyebrow text-accent">QUICK START</div>
-      <h4 className="font-display italic text-white text-lg mt-1">Where most users begin.</h4>
-      {/* List-style with hairline dividers — no individual cards */}
-      <div className="mt-4 border-t border-edge-muted">
-        {list.map((p) => {
-          const brand = brandBySlug(p.brandSlug);
-          return (
-            <div
-              key={p.slug}
-              className="group flex items-center gap-4 py-3 border-b border-edge-muted hover:bg-white/[0.02] transition -mx-1 px-1"
-            >
-              <div className="w-14 h-14 overflow-hidden flex-shrink-0 border border-edge-muted">
-                <Tin
-                  brand={brand?.name || ''}
-                  swatch={p.swatch}
-                  textColor={p.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
-                  surface={brand?.surface || 'concrete'}
-                  size={120}
-                  image={productImage(p.slug, p.brandSlug)}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-mono-badge text-ink-secondary">{brand?.name}</div>
-                <div className="text-white text-sm font-bold truncate leading-snug">{p.flavor}</div>
-                <div className="text-mono-badge text-ink-secondary mt-0.5">
-                  {p.strengthMg}MG <span className="text-accent">·</span> ${p.price.toFixed(2)}
-                </div>
-              </div>
-              <button
-                onClick={() => add(p)}
-                className="inline-flex items-center gap-1 h-9 px-4 bg-accent text-accent-on text-mono-badge font-bold tracking-wider hover:brightness-105 active:scale-95 transition"
-                aria-label={`Add ${p.flavor} to cart`}
-              >
-                <Plus size={12} strokeWidth={3} />
-                ADD
-              </button>
-            </div>
-          );
-        })}
+        <h3 className="font-display italic text-white text-3xl sm:text-4xl leading-[1.05]">
+          Your bag<br />is empty.
+        </h3>
+        <p className="mt-3 text-ink-secondary text-sm leading-relaxed max-w-xs mx-auto">
+          Start with one of our most-loved Swedish brands — or build a six-pack and save 15%.
+        </p>
       </div>
 
-      <div className="mt-8 text-center">
-        <div className="text-mono-eyebrow text-accent">OR EXPLORE</div>
-        <div className="mt-3 space-y-2">
-          <Link
-            to="/shop"
-            onClick={onClose}
-            className="block text-white text-sm hover:text-accent transition"
-          >
-            Browse all {totalProductCount} products →
-          </Link>
-          <Link
-            to="/build"
-            onClick={onClose}
-            className="block text-white text-sm hover:text-accent transition"
-          >
-            Build a Box (save 15%) →
-          </Link>
-          <Link
-            to="/quiz"
-            onClick={onClose}
-            className="block text-white text-sm hover:text-accent transition"
-          >
-            Take the Flavor Finder quiz →
-          </Link>
+      {/* QUICK START LIST */}
+      <section className="px-4 sm:px-5 pt-5 pb-4">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-mono-eyebrow text-accent">QUICK START</span>
+          <span aria-hidden className="flex-1 h-px bg-accent/40" />
         </div>
-      </div>
-      <div className="mt-10 text-center">
-        <button onClick={onClose} className="text-white text-sm underline underline-offset-4">
+        <ul className="divide-y divide-edge-muted">
+          {list.map((p) => {
+            const brand = brandBySlug(p.brandSlug);
+            return (
+              <li key={p.slug} className="flex items-center gap-3 py-3">
+                <Link
+                  to={`/products/${p.slug}`}
+                  onClick={onClose}
+                  className="w-14 h-14 shrink-0 overflow-hidden border border-edge-muted block"
+                >
+                  <Tin
+                    brand={brand?.name || ''}
+                    swatch={p.swatch}
+                    textColor={p.swatch === '#FFFFFF' ? '#0A0A0A' : '#FFFFFF'}
+                    surface={brand?.surface || 'concrete'}
+                    size={120}
+                    image={productImage(p.slug, p.brandSlug)}
+                  />
+                </Link>
+                <Link
+                  to={`/products/${p.slug}`}
+                  onClick={onClose}
+                  className="flex-1 min-w-0"
+                >
+                  <div className="text-mono-badge text-ink-secondary leading-none">{brand?.name}</div>
+                  <div className="text-white text-sm font-bold truncate mt-1">{p.flavor}</div>
+                  <div className="text-mono-badge text-ink-secondary mt-0.5">
+                    {p.strengthMg}MG <span className="text-accent">·</span> ${p.price.toFixed(2)}
+                  </div>
+                </Link>
+                <button
+                  onClick={() => add(p)}
+                  className="shrink-0 inline-flex items-center justify-center gap-1 h-10 px-4 bg-accent text-accent-on text-mono-badge font-bold tracking-wider hover:brightness-105 active:scale-95 transition no-tap-highlight"
+                  aria-label={`Add ${p.flavor} to bag`}
+                >
+                  <Plus size={12} strokeWidth={3} />
+                  ADD
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
+      {/* OR EXPLORE */}
+      <section className="px-4 sm:px-5 pt-3 pb-6 border-t border-edge-muted">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="text-mono-eyebrow text-accent">OR EXPLORE</span>
+          <span aria-hidden className="flex-1 h-px bg-accent/40" />
+        </div>
+        <ul className="divide-y divide-edge-muted">
+          {[
+            { to: '/shop', label: `Browse all ${totalProductCount} products` },
+            { to: '/build', label: 'Build a Box · Save 15%' },
+            { to: '/quiz', label: 'Take the Flavor Finder quiz' },
+          ].map((link) => (
+            <li key={link.to}>
+              <Link
+                to={link.to}
+                onClick={onClose}
+                className="flex items-center justify-between py-3.5 text-white text-sm font-medium hover:text-accent transition group"
+              >
+                <span>{link.label}</span>
+                <ArrowRight size={14} className="text-ink-secondary group-hover:text-accent group-hover:translate-x-0.5 transition" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {/* CLOSE TEXT LINK */}
+      <div className="px-4 sm:px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] text-center">
+        <button onClick={onClose} className="text-ink-secondary hover:text-white text-sm py-2 transition">
           Close
         </button>
       </div>

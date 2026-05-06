@@ -1,0 +1,14 @@
+{
+  "name": "pouches-co",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pouches.co — every Swedish nicotine pouch brand. One checkout. (Vite + React lives in /site)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm --prefix site install && npm --prefix site run build",
+    "start": "npx -y serve site/dist -s -l ${PORT:-4173} --no-clipboard",
+    "dev": "npm --prefix site run dev"
+  }
+}

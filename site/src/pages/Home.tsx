@@ -11,7 +11,7 @@ import { PillBadge } from '../components/Chips';
 import { HeroCarousel, type HeroSlide } from '../components/HeroCarousel';
 import { useState } from 'react';
 import { brandBySlug } from '../data/brands';
-import { BRAND_IMAGES, HERO_IMAGES, QUIZ_ICONS, productImage } from '../data/images';
+import { HERO_IMAGES, QUIZ_ICONS, productImage } from '../data/images';
 import { BrandLogo } from '../components/BrandLogo';
 // HERO_IMAGES is consumed by the slide config inside Hero(); keep the import.
 

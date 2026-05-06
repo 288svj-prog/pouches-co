@@ -1,0 +1,13 @@
+providers = ["node"]
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm-9_x"]
+
+[phases.install]
+cmds = ["npm --prefix site ci || npm --prefix site install"]
+
+[phases.build]
+cmds = ["npm --prefix site run build"]
+
+[start]
+cmd = "npx -y serve site/dist -s -l $PORT --no-clipboard"
