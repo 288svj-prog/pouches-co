@@ -181,9 +181,9 @@ export default function BYO() {
                           >
                             <Minus size={14} strokeWidth={3} />
                           </button>
-                          <div className="flex-1 bg-accent text-accent-on flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider tabular-nums">
-                            <Check size={12} strokeWidth={3} />
-                            <span>IN BOX · {inBox.qty}</span>
+                          <div className="flex-1 bg-accent text-accent-on flex items-center justify-center gap-1.5 text-sm font-bold tabular-nums">
+                            <Check size={14} strokeWidth={3} />
+                            <span>{inBox.qty}</span>
                           </div>
                           <button
                             onClick={() => updateQty(p.slug, inBox.qty + 1)}
