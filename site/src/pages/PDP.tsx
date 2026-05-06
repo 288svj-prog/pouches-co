@@ -9,7 +9,7 @@ import { Tin } from '../components/Tin';
 import { productImage } from '../data/images';
 import { Stars } from '../components/Stars';
 import { Eyebrow } from '../components/Eyebrow';
-import { PillBadge, SelectableChip } from '../components/Chips';
+import { PillBadge } from '../components/Chips';
 import { useCart } from '../store/cart';
 import { useDocumentMeta } from '../lib/useDocumentMeta';
 
@@ -79,11 +79,11 @@ export default function PDP() {
 
   return (
     <div className="bg-bg-primary">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-6 md:py-10">
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-10 py-5 md:py-10">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-10 lg:gap-16">
           {/* Gallery */}
           <div>
-            <div className="rounded-card overflow-hidden border border-edge bg-bg-secondary">
+            <div className="overflow-hidden border border-edge bg-bg-secondary">
               <Tin
                 brand={brand.name}
                 flavor={product.flavor.toUpperCase()}
@@ -101,7 +101,7 @@ export default function PDP() {
                 <button
                   key={i}
                   onClick={() => setThumb(i)}
-                  className={`aspect-square rounded-card overflow-hidden border-2 transition ${
+                  className={`aspect-square overflow-hidden border-2 transition no-tap-highlight ${
                     thumb === i ? 'border-accent' : 'border-edge'
                   }`}
                 >
@@ -124,50 +124,94 @@ export default function PDP() {
 
           {/* Info panel */}
           <div>
+            {/* Brand + bestseller eyebrow */}
             <div className="text-mono-badge text-ink-secondary">
               <Link to={`/brands/${brand.slug}`} className="hover:text-accent transition">
                 {brand.name}
               </Link>
-              {product.bestseller && <> · <span className="text-accent">BESTSELLER</span></>}
-            </div>
-            <h1 className="font-display italic text-white text-5xl md:text-6xl leading-none mt-2">{product.flavor}</h1>
-            <div className="mt-3 text-white text-base">
-              {product.strengthMg}mg <span className="text-accent">·</span> {capitalize(product.format)} Format
-            </div>
-            <div className="mt-3 flex items-center gap-3">
-              <Stars rating={product.rating} size={14} />
-              <span className="text-sm text-white">{product.rating.toFixed(1)}</span>
-              <span className="text-sm text-ink-secondary">— {product.reviews} reviews</span>
-              <a href="#reviews" className="ml-2 text-accent underline underline-offset-2 text-sm">Read reviews ↓</a>
+              {product.bestseller && <> <span className="text-accent">·</span> <span className="text-accent">BESTSELLER</span></>}
             </div>
 
-            <div className="mt-6">
-              <div className="text-white font-bold text-3xl">${product.price.toFixed(2)}</div>
-              <div className="text-mono-badge text-ink-secondary mt-1">PER ROLL · 20 POUCHES</div>
-              <div className="mt-2 text-mono-badge text-accent">
-                BULK SAVE: 5 ROLLS — ${product.bulkPricing[0].price.toFixed(2)} <span className="opacity-70">·</span> 10 ROLLS — ${product.bulkPricing[1].price.toFixed(2)}
+            {/* Headline — smaller on mobile */}
+            <h1 className="font-display italic text-white text-[40px] md:text-6xl leading-[0.95] mt-1.5 md:mt-2">
+              {product.flavor}
+            </h1>
+            <div className="mt-2 text-ink-secondary text-sm md:text-base">
+              {product.strengthMg}mg <span className="text-accent">·</span> {capitalize(product.format)} Format
+            </div>
+
+            {/* Stars + reviews link */}
+            <div className="mt-3 flex items-center gap-2 md:gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Stars rating={product.rating} size={13} />
+                <span className="text-sm text-white tabular-nums">{product.rating.toFixed(1)}</span>
+              </div>
+              <span className="text-xs md:text-sm text-ink-secondary">— {product.reviews} reviews</span>
+              <a href="#reviews" className="text-accent underline underline-offset-2 text-xs md:text-sm">
+                Read all
+              </a>
+            </div>
+
+            {/* Price */}
+            <div className="mt-5 md:mt-6">
+              <div className="flex items-end gap-3 flex-wrap">
+                <div className="text-white font-bold text-3xl md:text-4xl tabular-nums leading-none">
+                  ${product.price.toFixed(2)}
+                </div>
+                <div className="text-mono-badge text-ink-secondary pb-1">PER ROLL · 20 POUCHES</div>
+              </div>
+              {/* Bulk save — stacks tighter on mobile */}
+              <div className="mt-2.5 inline-flex flex-wrap items-center gap-x-2 gap-y-1 text-mono-badge text-accent">
+                <span className="opacity-70 text-white">BULK SAVE</span>
+                <span>5 ROLLS — ${product.bulkPricing[0].price.toFixed(2)}</span>
+                <span className="text-accent/60">·</span>
+                <span>10 ROLLS — ${product.bulkPricing[1].price.toFixed(2)}</span>
               </div>
             </div>
 
-            <div className="mt-5 text-mono-badge text-ink-secondary">
-              {product.strengthMg}MG STRONG <span className="text-accent">·</span> 20 POUCHES <span className="text-accent">·</span> TOBACCO-FREE <span className="text-accent">·</span> MADE IN SWEDEN
+            {/* Spec strip — 2-col grid on mobile so it never breaks awkwardly */}
+            <div className="mt-5 grid grid-cols-2 md:flex md:flex-wrap md:items-center md:gap-x-4 gap-y-1.5 text-mono-badge text-ink-secondary">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-1 h-1 bg-accent" />
+                {product.strengthMg}MG {tierLabel(product.strengthMg).toUpperCase()}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-1 h-1 bg-accent" />
+                20 POUCHES
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-1 h-1 bg-accent" />
+                TOBACCO-FREE
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-1 h-1 bg-accent" />
+                MADE IN SWEDEN
+              </span>
             </div>
 
-            {/* Flavor variant chips */}
+            {/* Flavor variant — tighter chip pattern, square, smaller thumb */}
             <div className="mt-6">
-              <div className="text-mono-eyebrow text-white mb-3">FLAVOR</div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-mono-eyebrow text-white">FLAVOR · {sameBrand.length} OPTIONS</div>
+                <Link to={`/brands/${brand.slug}`} className="text-accent text-xs underline underline-offset-2">
+                  View all →
+                </Link>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
                 {flavors.map((p) => {
                   const selected = p.slug === activeSlug;
                   return (
                     <button
                       key={p.slug}
                       onClick={() => setActiveSlug(p.slug)}
-                      className={`flex items-center gap-3 h-12 pl-1.5 pr-4 rounded-pill border transition-all ${
-                        selected ? 'border-accent text-accent shadow-glow-accent-strong' : 'border-edge text-white hover:border-white/40'
+                      className={`relative flex items-center gap-2.5 h-12 pl-1.5 pr-3 border transition-all no-tap-highlight ${
+                        selected
+                          ? 'border-accent shadow-glow-accent-strong bg-accent/5'
+                          : 'border-edge hover:border-white/40 bg-bg-secondary/40'
                       }`}
+                      aria-pressed={selected}
                     >
-                      <span className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
+                      <span className="w-9 h-9 overflow-hidden shrink-0 border border-edge-muted">
                         <Tin
                           brand={brand.name}
                           swatch={p.swatch}
@@ -177,80 +221,111 @@ export default function PDP() {
                           image={productImage(p.slug, p.brandSlug)}
                         />
                       </span>
-                      <span className="text-mono-badge truncate">{p.flavor.toUpperCase()}</span>
+                      <span
+                        className={`text-mono-badge truncate text-left flex-1 ${
+                          selected ? 'text-accent' : 'text-white'
+                        }`}
+                      >
+                        {p.flavor.toUpperCase()}
+                      </span>
+                      <span
+                        className="absolute left-0 right-0 bottom-0 h-0.5"
+                        style={{ background: p.swatch, opacity: selected ? 1 : 0.6 }}
+                        aria-hidden="true"
+                      />
                     </button>
                   );
                 })}
               </div>
-              <Link to={`/brands/${brand.slug}`} className="text-accent text-sm underline underline-offset-2 mt-2 inline-block">
-                View all {sameBrand.length} flavors →
-              </Link>
             </div>
 
-            {/* Strength variant chips */}
+            {/* Strength variant — square chips, no rounded-pill */}
             <div className="mt-6">
               <div className="text-mono-eyebrow text-white mb-3">STRENGTH</div>
               <div className="flex flex-wrap gap-2">
                 {strengthsToShow.map((mg) => {
                   const sibling = sameBrand.find((p) => p.strengthMg === mg && p.flavor === product.flavor)
                     || sameBrand.find((p) => p.strengthMg === mg);
+                  const selected = mg === product.strengthMg;
                   return (
-                    <SelectableChip
+                    <button
                       key={mg}
-                      selected={mg === product.strengthMg}
-                      onClick={() => {
-                        if (sibling) setActiveSlug(sibling.slug);
-                      }}
+                      onClick={() => sibling && setActiveSlug(sibling.slug)}
+                      className={`h-11 px-4 border text-mono-badge transition no-tap-highlight ${
+                        selected
+                          ? 'border-accent text-accent bg-accent/5 shadow-glow-accent-strong'
+                          : 'border-edge text-white hover:border-white/40 bg-bg-secondary/40'
+                      }`}
+                      aria-pressed={selected}
                     >
-                      {mg}mg · {tierLabel(mg)}
-                    </SelectableChip>
+                      {mg}mg <span className="text-accent">·</span> {tierLabel(mg).toUpperCase()}
+                    </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Quantity */}
-            <div className="mt-6 flex items-center gap-4">
-              <span className="text-mono-eyebrow text-white">QUANTITY</span>
-              <span className="text-mono-badge text-accent">(BYO Box saves 15% on 6+)</span>
-            </div>
-            <div className="mt-2 flex items-center border border-edge rounded-pill h-12 w-fit">
-              <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-12 h-12 flex items-center justify-center text-white">
-                <Minus size={16} />
-              </button>
-              <span className="w-12 text-center text-white font-medium">{qty}</span>
-              <button onClick={() => setQty(qty + 1)} className="w-12 h-12 flex items-center justify-center text-white">
-                <Plus size={16} />
-              </button>
-              <span className="px-4 text-mono-badge text-ink-secondary border-l border-edge h-full flex items-center">PER ROLL</span>
+            {/* Quantity — square stepper */}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-mono-eyebrow text-white">QUANTITY</span>
+                <span className="text-mono-badge text-accent">BOX SAVES 15% ON 6+</span>
+              </div>
+              <div className="flex items-stretch border border-edge h-12 w-full max-w-[260px]">
+                <button
+                  onClick={() => setQty(Math.max(1, qty - 1))}
+                  className="w-12 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={16} strokeWidth={2.5} />
+                </button>
+                <span className="flex-1 flex items-center justify-center text-white font-bold tabular-nums border-x border-edge">
+                  {qty}
+                </span>
+                <button
+                  onClick={() => setQty(qty + 1)}
+                  className="w-12 flex items-center justify-center text-white hover:text-accent transition no-tap-highlight"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={16} strokeWidth={2.5} />
+                </button>
+              </div>
             </div>
 
-            {/* CTAs */}
-            <div className="mt-6 space-y-3">
+            {/* In-flow CTAs — desktop shows both, mobile shows only "BUILD A BOX" since sticky bottom handles ADD */}
+            <div className="mt-6 space-y-2.5">
               <button
                 onClick={() => add(product, qty)}
-                className="w-full h-14 rounded-pill bg-accent text-accent-on font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:brightness-105 active:scale-[0.99] transition"
+                className="hidden md:flex w-full h-14 bg-accent text-accent-on font-bold uppercase tracking-wider items-center justify-center gap-2 hover:brightness-105 active:scale-[0.99] transition no-tap-highlight"
               >
                 <ShoppingBag size={16} strokeWidth={2.5} />
                 ADD TO BAG · ${(product.price * qty).toFixed(2)}
               </button>
               <Link
                 to="/build"
-                className="w-full h-14 rounded-pill border border-white text-white font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition"
+                className="w-full h-12 md:h-14 border border-white text-white font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-white/5 transition no-tap-highlight text-sm md:text-base"
               >
-                <Package size={16} strokeWidth={2.5} />
+                <Package size={15} strokeWidth={2.5} />
                 ADD TO BUILD A BOX
               </Link>
             </div>
 
-            {/* Trust strip */}
-            <div className="mt-5 text-mono-badge text-ink-secondary flex flex-wrap items-center gap-4">
-              <span className="inline-flex items-center gap-1.5"><Truck size={12} className="text-accent" /> SHIPS FROM UPPSALA</span>
-              <span className="inline-flex items-center gap-1.5"><Globe size={12} className="text-accent" /> 47 COUNTRIES</span>
-              <span className="inline-flex items-center gap-1.5"><Lock size={12} className="text-accent" /> FREE RETURNS</span>
+            {/* Trust strip — vertical stack on mobile to avoid wrapping */}
+            <div className="mt-5 grid grid-cols-1 md:flex md:flex-wrap md:gap-x-4 gap-y-2 text-mono-badge text-ink-secondary">
+              <span className="inline-flex items-center gap-1.5">
+                <Truck size={12} className="text-accent" /> SHIPS FROM UPPSALA
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Globe size={12} className="text-accent" /> 47 COUNTRIES
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Lock size={12} className="text-accent" /> FREE RETURNS
+              </span>
             </div>
 
-            <p className="mt-6 text-white/85 text-base italic leading-relaxed">{product.description}</p>
+            <p className="mt-6 text-white/85 text-sm md:text-base italic leading-relaxed">
+              {product.description}
+            </p>
           </div>
         </div>
 
