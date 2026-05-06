@@ -6,6 +6,7 @@ import { BottomNav } from './BottomNav';
 import { CartDrawer } from './CartDrawer';
 import { MobileMenu } from './MobileMenu';
 import { SearchOverlay } from './SearchOverlay';
+import { ScrollToTop } from './ScrollToTop';
 import { useCart } from '../store/cart';
 
 export function Layout() {
@@ -24,6 +25,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-bg-primary text-white flex flex-col">
+      <ScrollToTop />
       {!isCheckout && (
         <TopNav onOpenMenu={() => setMenu(true)} onOpenSearch={() => setSearch(true)} />
       )}
