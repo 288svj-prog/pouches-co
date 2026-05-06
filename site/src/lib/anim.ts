@@ -41,12 +41,19 @@ export function pulse(target: Target) {
   });
 }
 
-/** Quick acid-green flash on an element (background or color override). */
+/**
+ * Quick acid-green ring flash. Animates `outline` so we never overwrite the
+ * element's own background — important for sticky bars / cards that already
+ * have a `bg-bg-primary` we don't want to clobber.
+ */
 export function flashAccent(target: Target, opts?: { color?: string }) {
   if (reducedMotion) return;
   const color = opts?.color || '#CCFF00';
   return animate(target, {
-    backgroundColor: [{ to: color, duration: 80 }, { to: 'rgba(204,255,0,0)', duration: 320, ease: EASE.out }],
+    outlineColor: [{ to: color, duration: 80 }, { to: 'rgba(204,255,0,0)', duration: 320, ease: EASE.out }],
+    outlineWidth: [{ to: '3px', duration: 0 }, { to: '0px', duration: 320, ease: EASE.out }],
+    outlineStyle: [{ to: 'solid', duration: 0 }],
+    outlineOffset: [{ to: '0px', duration: 0 }],
   });
 }
 

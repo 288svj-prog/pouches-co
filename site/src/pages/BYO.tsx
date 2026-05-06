@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Check, X, ChevronUp, Package } from 'lucide-react';
-import { celebrate, flashAccent } from '../lib/anim';
+import { celebrate } from '../lib/anim';
 import { products } from '../data/products';
 import { Tin } from '../components/Tin';
 import { productImage } from '../data/images';
@@ -41,10 +41,7 @@ export default function BYO() {
   useEffect(() => {
     if (byoCount >= 6 && lastByoCount.current < 6) {
       if (desktopBoxRef.current) celebrate(desktopBoxRef.current);
-      if (mobileBarRef.current) {
-        celebrate(mobileBarRef.current);
-        flashAccent(mobileBarRef.current);
-      }
+      if (mobileBarRef.current) celebrate(mobileBarRef.current);
     }
     lastByoCount.current = byoCount;
   }, [byoCount]);
